@@ -19,7 +19,6 @@
         if (headerRowIndex === -1 || headerRowIndex > 25) {
           headerRowIndex = 0;
         }
-
         var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
         csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
         return csv;
@@ -33,7 +32,6 @@
 </script>
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -44,65 +42,44 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.5/dist/chart.umd.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
+    /* Bestehende Stile */
     input[type="date"]::-webkit-calendar-picker-indicator {
       filter: invert(1);
     }
-
     select {
       background-color: #4b5563;
-      /* bg-gray-700 */
       border: 3px solid #6b7280;
-      /* border-gray-600 */
       color: #e5e7eb;
-      /* text-gray-200 */
     }
-
-    border3 {
+    .border3 {
       border: 3px solid gray !important;
     }
-
     select:focus {
       outline: none;
       ring: 3px solid #3b82f6;
-      /* focus:ring-blue-500 */
+    }
+
+    /* Neue Stile für Parallax und Transitionen */
+    .parallax-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url('background.jpg'); /* Ersetze durch dein Hintergrundbild */
+      background-size: cover;
+      transform: translate3d(0, 0, 0);
+      transition: transform 0.1s ease-out;
+      z-index: -1; /* Hintergrund hinter den Inhalt legen */
+    }
+    .smooth-transition {
+      transition: all 0.3s ease-in-out; /* Apple-typische sanfte Übergänge */
     }
   </style>
 </head>
-
 <body className="bg-gray-900 text-gray-200">
+  <div className="parallax-bg"></div> <!-- Parallax-Hintergrund -->
   <div id="root"></div>
-  <script type="text/javascript">
-    var gk_isXlsx = false;
-    var gk_xlsxFileLookup = {};
-    var gk_fileData = {};
-    function filledCell(cell) {
-      return cell !== '' && cell != null;
-    }
-    function loadFileData(filename) {
-      if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-        try {
-          var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-          var firstSheetName = workbook.SheetNames[0];
-          var worksheet = workbook.Sheets[firstSheetName];
-          var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-          var filteredData = jsonData.filter(row => row.some(filledCell));
-          var headerRowIndex = filteredData.findIndex((row, index) =>
-            row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-          );
-          if (headerRowIndex === -1 || headerRowIndex > 25) {
-            headerRowIndex = 0;
-          }
-          var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
-          csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-          return csv;
-        } catch (e) {
-          console.error(e);
-          return "";
-        }
-      }
-      return gk_fileData[filename] || "";
-    }
-  </script>
   <script type="text/babel">
     const { useState, useEffect } = React;
 
@@ -139,6 +116,16 @@
 
       useEffect(() => {
         loadProfileData(currentProfile);
+      }, []);
+
+      useEffect(() => {
+        const handleScroll = () => {
+          const parallaxBg = document.querySelector('.parallax-bg');
+          const scrollPosition = window.pageYOffset;
+          parallaxBg.style.transform = `translate3d(0, ${scrollPosition * 0.5}px, 0)`;
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
       }, []);
 
       const loadProfileData = async (profile) => {
@@ -312,14 +299,14 @@
 
       return (
         <ErrorBoundary>
-          <div className="min-h-screen bg-gray-900 text-gray-200 flex flex-col sm:flex-row">
-            <div className="w-full sm:w-16 md:w-56 bg-gray-800 p-4 flex flex-col">
+          <div className="min-h-screen bg-gray-900 text-gray-200 flex flex-col sm:flex-row relative">
+            <div className="w-full sm:w-16 md:w-56 bg-gray-800 p-4 flex flex-col smooth-transition z-10">
               <h1 className="text-2xl font-bold text-white mb-6 hidden sm:block">Trading Journal</h1>
               <h1 className="text-xl font-bold text-white mb-4 sm:hidden">TJ</h1>
               <select
                 value={currentProfile}
                 onChange={(e) => handleProfileChange(e.target.value)}
-                className="w-full p-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 mb-4"
+                className="w-full p-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 mb-4 smooth-transition"
               >
                 {Array.isArray(profiles) ? profiles.map((p) => (
                   <option key={p} value={p}>
@@ -331,48 +318,48 @@
               </select>
               <button
                 onClick={() => setShowProfileManager(!showProfileManager)}
-                className={`w-full text-left py-2 px-4 rounded-lg ${showProfileManager ? 'bg-blue-600 text-white' : 'hover:bg-gray-700'}`}
+                className={`w-full text-left py-2 px-4 rounded-lg smooth-transition ${showProfileManager ? 'bg-blue-600 text-white' : 'hover:bg-gray-700'}`}
               >
                 <span className="block sm:truncate">Manage Profiles</span>
               </button>
               {showProfileManager && (
-                <div className="mb-4 p-4 bg-gray-700 rounded-lg">
+                <div className="mb-4 p-4 bg-gray-700 rounded-lg smooth-transition">
                   <input
                     type="text"
                     value={newProfileName}
                     onChange={(e) => setNewProfileName(e.target.value)}
                     placeholder="New profile name"
-                    className="w-full p-2.5 bg-gray-800 border ring-2 ring-gray-500 border-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 text-gray-200 mb-2 border3"
+                    className="w-full p-2.5 bg-gray-800 border ring-2 ring-gray-500 border-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 text-gray-200 mb-2 border3 smooth-transition"
                   />
                   <button
                     onClick={handleRenameProfile}
-                    className="w-full px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-600 mb-2"
+                    className="w-full px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-600 mb-2 smooth-transition"
                   >
                     Rename Profile
                   </button>
                   <button
                     onClick={handleAddProfile}
-                    className="w-full px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-600 mb-2"
+                    className="w-full px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-600 mb-2 smooth-transition"
                   >
                     Add New Profile
                   </button>
                   <button
                     onClick={handleDeleteProfile}
-                    className="w-full px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-red-700 mb-2"
+                    className="w-full px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-red-700 mb-2 smooth-transition"
                   >
                     Delete Profile
                   </button>
                   <button
                     onClick={handleSubmitData}
                     disabled={isSubmitting}
-                    className={`w-full px-4 py-2 text-white rounded-lg ${isSubmitting ? 'bg-gray-900 cursor-not-allowed' : 'bg-gray-900 hover:bg-gray-600'}`}
+                    className={`w-full px-4 py-2 text-white rounded-lg smooth-transition ${isSubmitting ? 'bg-gray-900 cursor-not-allowed' : 'bg-gray-900 hover:bg-gray-600'}`}
                   >
                     {isSubmitting ? 'Submitting...' : 'Submit Data'}
                   </button>
                   <button
                     onClick={() => loadProfileData(currentProfile)}
                     disabled={isLoading}
-                    className={`w-full px-4 py-2 text-white rounded-lg mt-2 ${isLoading ? 'bg-gray-900 cursor-not-allowed' : 'bg-gray-900 hover:bg-gray-600'}`}
+                    className={`w-full px-4 py-2 text-white rounded-lg mt-2 smooth-transition ${isLoading ? 'bg-gray-900 cursor-not-allowed' : 'bg-gray-900 hover:bg-gray-600'}`}
                   >
                     {isLoading ? 'Loading...' : 'Get Data'}
                   </button>
@@ -386,13 +373,13 @@
                     setOvDate(null);
                     setShowProfileManager(false);
                   }}
-                  className={`w-full text-left py-2 px-4 rounded-lg ${view === v ? 'bg-blue-600 text-white' : 'hover:bg-gray-700'}`}
+                  className={`w-full text-left py-2 px-4 rounded-lg smooth-transition ${view === v ? 'bg-blue-600 text-white' : 'hover:bg-gray-700'}`}
                 >
                   <span className="block sm:truncate">{v === 'allTrades' ? 'All Trades' : v.charAt(0).toUpperCase() + v.slice(1)}</span>
                 </button>
               ))}
             </div>
-            <div className="flex-1 p-6 overflow-y-auto">
+            <div className="flex-1 p-6 overflow-y-auto smooth-transition z-10">
               {ovDate ? <DayOverview t={trades} d={ovDate} sd={setOvDate} gp={getProfit} gc={getCData} delTrade={delTrade} /> : (
                 <>
                   {view === 'dashboard' && <DashboardView t={trades} gc={getCData} gp={getProfit} gf={getFTrades} gtp={getTimePerfData} />}
@@ -424,7 +411,7 @@
         });
 
       return (
-        <div className="bg-gray-800 rounded-lg p-6">
+        <div className="bg-gray-800 rounded-lg p-6 smooth-transition">
           <div className="flex justify-between mb-6">
             <button onClick={() => (m === 0 ? (sm(11), sy(y - 1)) : sm(m - 1))} className="text-blue-400 hover:text-blue-300">
               Previous
@@ -447,8 +434,7 @@
                 <div
                   key={x.dt}
                   onClick={() => (new Date(x.dt) <= new Date(today) ? (sd(x.dt), so(x.dt)) : null)}
-                  className={`p-3 rounded-lg ${new Date(x.dt) > new Date(today) ? 'bg-gray-600 cursor-not-allowed' : 'cursor-pointer'} ${gp(x.dt) > 0 ? 'bg-green-700' : gp(x.dt) < 0 ? 'bg-red-700' : 'bg-gray-700'
-                    } hover:bg-gray-600 flex flex-col items-center`}
+                  className={`p-3 rounded-lg ${new Date(x.dt) > new Date(today) ? 'bg-gray-600 cursor-not-allowed' : 'cursor-pointer'} ${gp(x.dt) > 0 ? 'bg-green-700' : gp(x.dt) < 0 ? 'bg-red-700' : 'bg-gray-700'} hover:bg-gray-600 flex flex-col items-center smooth-transition`}
                 >
                   <span className="text-white text-base">{x.day}</span>
                   <span className={`text-sm ${gp(x.dt) > 0 ? 'text-green-300' : 'text-red-300'}`}>{gp(x.dt) !== 0 ? `${gp(x.dt).toFixed(2)} $` : ''}</span>
@@ -542,7 +528,7 @@
       };
 
       return (
-        <div className="bg-gray-800 rounded-lg p-6">
+        <div className="bg-gray-800 rounded-lg p-6 smooth-transition">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-semibold text-white">Trades for {d}</h2>
           </div>
@@ -552,14 +538,14 @@
               value={d}
               onChange={(e) => sd(e.target.value)}
               max={today}
-              className="p-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 mb-4 w-full"
+              className="p-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 mb-4 w-full smooth-transition"
             />
             <div>
               <h3 className="text-xl font-semibold text-gray-300 mb-4">Add Trade</h3>
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-4">
-                    <select value={market} onChange={(e) => setMarket(e.target.value)} className="w-full p-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200">
+                    <select value={market} onChange={(e) => setMarket(e.target.value)} className="w-full p-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 smooth-transition">
                       {markets.map((x) => (
                         <option key={x} value={x}>
                           {x}
@@ -572,7 +558,7 @@
                       placeholder="Risk to Reward *"
                       value={riskReward}
                       onChange={(e) => setRiskReward(e.target.value)}
-                      className="w-full p-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200"
+                      className="w-full p-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 smooth-transition"
                       required
                     />
                     <input
@@ -581,7 +567,7 @@
                       placeholder="Profit ($)*"
                       value={profitLossDollar}
                       onChange={(e) => setProfitLossDollar(e.target.value)}
-                      className="w-full p-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200"
+                      className="w-full p-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 smooth-transition"
                       required
                     />
                     <input
@@ -589,19 +575,19 @@
                       placeholder="Reason for Trade"
                       value={reason}
                       onChange={(e) => setReason(e.target.value)}
-                      className="w-full p-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200"
+                      className="w-full p-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 smooth-transition"
                     />
-                    <div className="p-2.5 bg-gray-700 border border-gray-600 rounded-lg">
+                    <div className="p-2.5 bg-gray-700 border border-gray-600 rounded-lg smooth-transition">
                       <p className="text-gray-200 mb-2 text-base">Trade Image</p>
-                      <input type="file" accept="image/*" onChange={handleImageUpload} className="p-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-200 w-full" />
-                      {image && <img src={image} alt="Trade screenshot" className="mt-2 max-w-[250px] rounded-lg" />}
+                      <input type="file" accept="image/*" onChange={handleImageUpload} className="p-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-200 w-full smooth-transition" />
+                      {image && <img src={image} alt="Trade screenshot" className="mt-2 max-w-[250px] rounded-lg smooth-transition" />}
                     </div>
                   </div>
                   <div className="space-y-4">
                     <select
                       value={tradeType}
                       onChange={(e) => setTradeType(e.target.value)}
-                      className="w-full p-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200"
+                      className="w-full p-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 smooth-transition"
                     >
                       <option value="Long">Long</option>
                       <option value="Short">Short</option>
@@ -609,7 +595,7 @@
                     <select
                       value={strategy}
                       onChange={(e) => setStrategy(e.target.value)}
-                      className="w-full p-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200"
+                      className="w-full p-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 smooth-transition"
                     >
                       {st.map((x) => (
                         <option key={x} value={x}>
@@ -623,14 +609,14 @@
                       placeholder="Duration (min)*"
                       value={tradeDuration}
                       onChange={(e) => setTradeDuration(e.target.value)}
-                      className="w-full p-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200"
+                      className="w-full p-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 smooth-transition"
                       required
                     />
-                    <div className="p-2.5 bg-gray-700 border border-gray-600 rounded-lg">
+                    <div className="p-2.5 bg-gray-700 border border-gray-600 rounded-lg smooth-transition">
                       <p className="text-gray-200 mb-2 text-base">Rating</p>
                       <div className="flex space-x-1">
                         {[1, 2, 3, 4, 5].map((s) => (
-                          <button key={s} onClick={() => setStars(s)} className={`text-xl ${s <= stars ? 'text-yellow-400' : 'text-gray-400'}`} type="button">
+                          <button key={s} onClick={() => setStars(s)} className={`text-xl ${s <= stars ? 'text-yellow-400' : 'text-gray-400'} smooth-transition`} type="button">
                             ★
                           </button>
                         ))}
@@ -645,7 +631,7 @@
                       <div key={x} className="flex items-center">
                         <button
                           onClick={() => setTags((p) => (p.includes(x) ? p.filter((t) => t !== x) : [...p, x]))}
-                          className={`px-3 py-1 rounded-lg text-sm mr-2 ${tags.includes(x) ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-200'}`}
+                          className={`px-3 py-1 rounded-lg text-sm mr-2 smooth-transition ${tags.includes(x) ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-200'}`}
                           type="button"
                         >
                           {x}
@@ -659,13 +645,13 @@
                       value={newTag}
                       onChange={(e) => setNewTag(e.target.value)}
                       placeholder="New tag"
-                      className="p-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 flex-1"
+                      className="p-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 flex-1 smooth-transition"
                     />
                     <button
                       onClick={() => {
                         newTag.trim() && (ag(newTag.trim()), setNewTag(''));
                       }}
-                      className="px-4 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-500 text-sm"
+                      className="px-4 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-500 text-sm smooth-transition"
                       type="button"
                     >
                       Add Tag
@@ -673,13 +659,13 @@
                   </div>
                 </div>
                 <div className="mt-4">
-                  <button onClick={submitTrade} className="px-4 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-500 text-sm">
+                  <button onClick={submitTrade} className="px-4 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-500 text-sm smooth-transition">
                     {edit ? 'Update Trade' : 'Add Trade'}
                   </button>
                   {edit && (
                     <button
                       onClick={resetForm}
-                      className="px-4 py-1.5 bg-gray-600 text-white rounded-lg hover:bg-gray-500 ml-2 text-sm"
+                      className="px-4 py-1.5 bg-gray-600 text-white rounded-lg hover:bg-gray-500 ml-2 text-sm smooth-transition"
                       type="button"
                     >
                       Cancel
@@ -691,7 +677,7 @@
             <div>
               <h3 className="text-xl font-semibold text-gray-300 mb-4">Trade List</h3>
               <div>{(t[d] || []).map((x, i) => (
-                <div key={i} className="p-3.5 bg-gray-700 rounded-lg mb-1">
+                <div key={i} className="p-3.5 bg-gray-700 rounded-lg mb-1 smooth-transition">
                   <p className="text-gray-200 text-base">
                     <strong>{(x.profitLossDollar || 0).toFixed(2)} $</strong> ({x.market}, R:R {x.riskReward || 0})
                   </p>
@@ -699,7 +685,7 @@
                   <p className="text-sm text-gray-400">Main Reason: {x.strategy}</p>
                   <p className="text-sm text-gray-400">Tags: {(x.tags || []).join(', ')}</p>
                   <p className="text-sm text-gray-400">Duration: {x.tradeDuration || 0} min, Stars: {x.stars || 0}</p>
-                  {x.image && <img src={x.image} alt="Trade screenshot" className="mt-2 max-w-[250px] rounded-lg" />}
+                  {x.image && <img src={x.image} alt="Trade screenshot" className="mt-2 max-w-[250px] rounded-lg smooth-transition" />}
                   <div className="mt-2 flex space-x-2">
                     <button
                       onClick={() => {
@@ -716,11 +702,11 @@
                         setTags(x.tags || []);
                         setNewTag('');
                       }}
-                      className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-500 text-sm"
+                      className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-500 text-sm smooth-transition"
                     >
                       Edit
                     </button>
-                    <button onClick={() => dt(d, i)} className="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-500 text-sm">
+                    <button onClick={() => dt(d, i)} className="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-500 text-sm smooth-transition">
                       Delete
                     </button>
                   </div>
@@ -732,8 +718,8 @@
               <div className="flex flex-wrap gap-2">
                 {tg.map((x) => (
                   <div key={x} className="flex items-center">
-                    <span className="px-3 py-1 bg-gray-700 text-gray-200 rounded-lg text-sm mr-2">{x}</span>
-                    <button onClick={() => dg(x)} className="text-red-400 hover:text-red-300 text-sm">
+                    <span className="px-3 py-1 bg-gray-700 text-gray-200 rounded-lg text-sm mr-2 smooth-transition">{x}</span>
+                    <button onClick={() => dg(x)} className="text-red-400 hover:text-red-300 text-sm smooth-transition">
                       ×
                     </button>
                   </div>
@@ -754,7 +740,7 @@
         }
       };
       return (
-        <div className="bg-gray-800 rounded-lg p-6">
+        <div className="bg-gray-800 rounded-lg p-6 smooth-transition">
           <h2 className="text-2xl font-semibold text-white mb-6">Strategies</h2>
           <div className="space-y-6">
             <div>
@@ -765,9 +751,9 @@
                   value={newStrategy}
                   onChange={(ev) => setNewStrategy(ev.target.value)}
                   placeholder="New Strategy"
-                  className="p-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 flex-1"
+                  className="p-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 flex-1 smooth-transition"
                 />
-                <button onClick={handleAddStrategy} className="px-4 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-500 text-sm">
+                <button onClick={handleAddStrategy} className="px-4 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-500 text-sm smooth-transition">
                   Add
                 </button>
               </div>
@@ -776,9 +762,9 @@
               <h3 className="text-xl font-semibold text-gray-300 mb-4">Strategy List</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {strategies.map((s) => (
-                  <div key={s} className="flex justify-between items-center p-3.5 bg-gray-700 rounded-lg">
+                  <div key={s} className="flex justify-between items-center p-3.5 bg-gray-700 rounded-lg smooth-transition">
                     <span className="text-gray-200 text-base">{s}</span>
-                    <button onClick={() => delStrategy(s)} className="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-500 text-sm">
+                    <button onClick={() => delStrategy(s)} className="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-500 text-sm smooth-transition">
                       Delete
                     </button>
                   </div>
@@ -797,7 +783,7 @@
       const longTrades = f.filter((x) => x.tradeType === 'Long');
       const shortTrades = f.filter((x) => x.tradeType === 'Short');
       const longWR = longTrades.length > 0 ? (longTrades.filter((x) => (x.profitLossDollar || 0) > 0).length / longTrades.length) * 100 : 0;
-      const shortWR = shortTrades.length > 0 ? (shortTrades.filter((x) => (x.profitLossDollar || 0) > 0).length / shortTrades.length) * 100 : 0;
+      const shortWR = shortTrades.length > 0 ? Gine(shortTrades.filter((x) => (x.profitLossDollar || 0) > 0).length / shortTrades.length) * 100 : 0;
       const w = f.filter((x) => (x.profitLossDollar || 0) > 0);
       const wr = tt > 0 ? (w.length / tt) * 100 : 0;
       const ap = tt > 0 ? tp / tt : 0;
@@ -839,7 +825,7 @@
       }, [t, gtp, gf]);
 
       return (
-        <div className="space-y-6">
+        <div className="space-y-6 smooth-transition">
           <h2 className="text-2xl font-semibold text-white">Dashboard</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
@@ -856,18 +842,18 @@
               { l: 'Long Win Rate', v: `${longWR.toFixed(2)}%` },
               { l: 'Short Win Rate', v: `${shortWR.toFixed(2)}%` },
             ].map(({ l, v, c }) => (
-              <div key={l} className="bg-gray-800 rounded-lg p-3 border border-gray-600">
+              <div key={l} className="bg-gray-800 rounded-lg p-3 border border-gray-600 smooth-transition">
                 <p className="text-lg font-semibold text-gray-300">{l}</p>
                 <p className={c || 'text-gray-200'}>{v}</p>
               </div>
             ))}
           </div>
           <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 bg-gray-800 rounded-lg p-4">
+            <div className="flex-1 bg-gray-800 rounded-lg p-4 smooth-transition">
               <h3 className="text-lg font-semibold text-gray-300 mb-4">Profit</h3>
               <canvas id="dashChart"></canvas>
             </div>
-            <div className="flex-1 bg-gray-800 rounded-lg p-4">
+            <div className="flex-1 bg-gray-800 rounded-lg p-4 smooth-transition">
               <h3 className="text-lg font-semibold text-gray-300 mb-4">Performance by Trade Duration</h3>
               <canvas id="timePerfChart"></canvas>
             </div>
@@ -935,11 +921,11 @@
       };
 
       return (
-        <div className="bg-gray-800 rounded-lg p-6">
+        <div className="bg-gray-800 rounded-lg p-6 smooth-transition">
           <div className="flex justify-between mb-6">
             <h3 className="text-2xl font-semibold text-white">Day Overview: {d}</h3>
             <div className="flex space-x-2">
-              <button onClick={() => sd(null)} className="px-4 py-1.5 bg-gray-600 text-white rounded-lg hover:bg-gray-500 text-sm">
+              <button onClick={() => sd(null)} className="px-4 py-1.5 bg-gray-600 text-white rounded-lg hover:bg-gray-500 text-sm smooth-transition">
                 Close
               </button>
             </div>
@@ -961,14 +947,14 @@
                 { l: 'Long Win Rate', v: `${longWR.toFixed(2)}%` },
                 { l: 'Short Win Rate', v: `${shortWR.toFixed(2)}%` },
               ].map(({ l, v, c }) => (
-                <div key={l} className="p-3 bg-gray-700 rounded-lg border border-gray-600">
+                <div key={l} className="p-3 bg-gray-700 rounded-lg border border-gray-600 smooth-transition">
                   <p className="text-lg font-semibold text-gray-300">{l}</p>
                   <p className={c || 'text-gray-200'}>{v}</p>
                 </div>
               ))}
             </div>
             {dt.length > 0 && (
-              <div className="bg-gray-800 rounded-lg p-4">
+              <div className="bg-gray-800 rounded-lg p-4 smooth-transition">
                 <h3 className="text-lg font-semibold text-gray-300 mb-4">Profit (Day)</h3>
                 <canvas id={`dayChart-${d}`}></canvas>
               </div>
@@ -978,7 +964,7 @@
                 <h3 className="text-xl font-semibold text-gray-300 mb-4">Trade List</h3>
                 <div>
                   {dt.map((x, i) => (
-                    <div key={i} className="p-3.5 bg-gray-700 rounded-lg mb-1">
+                    <div key={i} className="p-3.5 bg-gray-700 rounded-lg mb-1 smooth-transition">
                       <p className="text-gray-200 text-base">
                         <strong>{(x.profitLossDollar || 0).toFixed(2)} $</strong> ({x.market}, R:R {x.riskReward || 0})
                       </p>
@@ -986,9 +972,9 @@
                       <p className="text-sm text-gray-400">Main Reason: {x.strategy}</p>
                       <p className="text-sm text-gray-400">Tags: {(x.tags || []).join(', ')}</p>
                       <p className="text-sm text-gray-400">Duration: {x.tradeDuration || 0} min, Stars: {x.stars || 0}</p>
-                      {x.image && <img src={x.image} alt="Trade screenshot" className="mt-2 max-w-[250px] rounded-lg cursor-pointer" onClick={() => setSelectedImage(x.image)} />}
+                      {x.image && <img src={x.image} alt="Trade screenshot" className="mt-2 max-w-[250px] rounded-lg cursor-pointer smooth-transition" onClick={() => setSelectedImage(x.image)} />}
                       <div className="mt-2">
-                        <button onClick={() => handleDeleteTrade(i)} className="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-500 text-sm">
+                        <button onClick={() => handleDeleteTrade(i)} className="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-500 text-sm smooth-transition">
                           Delete
                         </button>
                       </div>
@@ -999,8 +985,8 @@
             )}
           </div>
           {selectedImage && (
-            <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50" onClick={() => setSelectedImage(null)}>
-              <img src={selectedImage} alt="Enlarged Trade screenshot" className="max-h-90vh max-w-90vw" />
+            <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 smooth-transition" onClick={() => setSelectedImage(null)}>
+              <img src={selectedImage} alt="Enlarged Trade screenshot" className="max-h-90vh max-w-90vw smooth-transition" />
             </div>
           )}
         </div>
@@ -1024,25 +1010,25 @@
       };
 
       return (
-        <div className="bg-gray-800 rounded-lg p-6">
+        <div className="bg-gray-800 rounded-lg p-6 smooth-transition">
           <h2 className="text-2xl font-semibold text-white mb-6">All Trades</h2>
           <div className="flex flex-col sm:flex-row sm:space-x-4 mb-6 flex-wrap gap-2 sm:gap-4">
             <input
               type="date"
               value={fst}
               onChange={(e) => sfst(e.target.value)}
-              className="p-2.5 bg-gray-700 border border-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 w-full sm:w-auto"
+              className="p-2.5 bg-gray-700 border border-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 w-full sm:w-auto smooth-transition"
             />
             <input
               type="date"
               value={fe}
               onChange={(e) => sfe(e.target.value)}
-              className="p-2.5 bg-gray-700 border border-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 w-full sm:w-auto"
+              className="p-2.5 bg-gray-700 border border-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 w-full sm:w-auto smooth-transition"
             />
             <select
               value={fm}
               onChange={(e) => sfm(e.target.value)}
-              className="p-2.5 bg-gray-700 border border-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 w-full sm:w-auto"
+              className="p-2.5 bg-gray-700 border border-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 w-full sm:w-auto smooth-transition"
             >
               <option value="All">All Markets</option>
               {markets.map((x) => (
@@ -1054,7 +1040,7 @@
             <select
               value={fp}
               onChange={(e) => sfp(e.target.value)}
-              className="p-2.5 bg-gray-700 border border-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 w-full sm:w-auto"
+              className="p-2.5 bg-gray-700 border border-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 w-full sm:w-auto smooth-transition"
             >
               <option value="All">All Time</option>
               <option value="Week">This Week</option>
@@ -1064,7 +1050,7 @@
             <select
               value={ft}
               onChange={(e) => sft(e.target.value)}
-              className="p-2.5 bg-gray-700 border border-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 w-full sm:w-auto"
+              className="p-2.5 bg-gray-700 border border-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 w-full sm:w-auto smooth-transition"
             >
               <option value="All">All Tags</option>
               {tg.map((x) => (
@@ -1076,7 +1062,7 @@
             <select
               value={fs || ''}
               onChange={(e) => sfs(e.target.value ? parseInt(e.target.value) : null)}
-              className="p-2.5 bg-gray-700 border border-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 w-full sm:w-auto"
+              className="p-2.5 bg-gray-700 border border-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 w-full sm:w-auto smooth-transition"
             >
               <option value="">All Ratings</option>
               {[1, 2, 3, 4, 5].map((s) => (
@@ -1085,7 +1071,7 @@
                 </option>
               ))}
             </select>
-            <button onClick={clearFilters} className="p-2.5 bg-gray-600 text-white rounded-lg hover:bg-gray-500 text-sm">
+            <button onClick={clearFilters} className="p-2.5 bg-gray-600 text-white rounded-lg hover:bg-gray-500 text-sm smooth-transition">
               Clear Filters
             </button>
           </div>
@@ -1103,7 +1089,7 @@
                 { l: 'Max Loss Trade', v: `${ml.toFixed(2)} $` },
                 { l: 'Max Drawdown', v: `${(-md).toFixed(2)} $` },
               ].map(({ l, v, c }) => (
-                <div key={l} className="bg-gray-800 rounded-lg p-3 border border-gray-600">
+                <div key={l} className="bg-gray-800 rounded-lg p-3 border border-gray-600 smooth-transition">
                   <p className="text-lg font-semibold text-gray-300">{l}</p>
                   <p className={c || 'text-gray-200'}>{v}</p>
                 </div>
@@ -1113,7 +1099,7 @@
               <h3 className="text-xl font-semibold text-gray-300 mb-4">Strategy Performance</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {Object.entries(sp).map(([s, { p, w, t }]) => (
-                  <div key={s} className="p-3.5 bg-gray-700 rounded-lg">
+                  <div key={s} className="p-3.5 bg-gray-700 rounded-lg smooth-transition">
                     <p className="text-gray-200 text-base">
                       <strong>{p.toFixed(2)} $</strong> ({w.toFixed(2)}% WR, {t} Trades)
                     </p>
@@ -1125,14 +1111,14 @@
               <h3 className="text-xl font-semibold text-gray-300 mb-4">Trade List</h3>
               <div>
                 {f.map((x, i) => (
-                  <div key={i} className="p-3.5 bg-gray-700 rounded-lg mb-1">
+                  <div key={i} className="p-3.5 bg-gray-700 rounded-lg mb-1 smooth-transition">
                     <p className="text-gray-200 text-base">
                       <strong>{(x.profitLossDollar || 0).toFixed(2)} $</strong> ({x.market}, R:R {x.riskReward || 0})
                     </p>
                     <p className="text-sm text-gray-400">Type: {x.tradeType || 'Long'}</p>
                     <p className="text-sm text-gray-400">Date: {x.date}</p>
                     <p className="text-sm text-gray-400">Tags: {(x.tags || []).join(', ')}</p>
-                    <button onClick={() => dt(x.date, i)} className="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-500 mt-2 text-sm">
+                    <button onClick={() => dt(x.date, i)} className="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-500 mt-2 text-sm smooth-transition">
                       Delete
                     </button>
                   </div>
@@ -1147,5 +1133,4 @@
     ReactDOM.render(<App />, document.getElementById('root'));
   </script>
 </body>
-
 </html>
