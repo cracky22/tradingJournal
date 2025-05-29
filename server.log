@@ -10,3 +10,4 @@
 2025-05-29 22:27:31,548 [INFO] Saved data to trading_journal_data.json, size: 207.0 B
 2025-05-29 22:27:31,549 [INFO] Removed backup: trading_journal_data.json.backup
 2025-05-29 22:27:31,550 [INFO] Sending response for /api/submit_data, size: 38.0 B
+2025-05-29 22:29:09,927 [INFO] Sending API documentation, size: 979.0 B

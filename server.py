@@ -21,10 +21,11 @@ DATA_FILE = environ.get('TRADING_JOURNAL_DATA_FILE', 'trading_journal_data.json'
 HOST = environ.get('TRADING_JOURNAL_HOST', 'localhost')
 PORT = int(environ.get('TRADING_JOURNAL_PORT', 2108))
 LOG_FILE = environ.get('TRADING_JOURNAL_LOG_FILE', 'server.log')
+LAST_LOG_FILE = environ.get('TRADING_JOURNAL_LAST_LOG_FILE', 'last.log')
 MAX_LOG_SIZE = int(environ.get('TRADING_JOURNAL_MAX_LOG_SIZE', 10 * 1024 * 1024))  # 10 MB
 BACKUP_COUNT = int(environ.get('TRADING_JOURNAL_LOG_BACKUP_COUNT', 5))
 
-# Configure logging with rotation
+# Configure logging with rotation and last log
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
@@ -32,8 +33,14 @@ stream_handler = logging.StreamHandler(sys.stdout)
 stream_handler.setFormatter(formatter)
 file_handler = RotatingFileHandler(LOG_FILE, maxBytes=MAX_LOG_SIZE, backupCount=BACKUP_COUNT)
 file_handler.setFormatter(formatter)
+# Clear last.log and set up handler
+if os.path.exists(LAST_LOG_FILE):
+    os.remove(LAST_LOG_FILE)
+last_log_handler = logging.FileHandler(LAST_LOG_FILE)
+last_log_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
 logger.addHandler(file_handler)
+logger.addHandler(last_log_handler)
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
