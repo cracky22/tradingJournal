@@ -4,3 +4,15 @@
 2025-05-29 22:50:37,165 [INFO] Received GET request for profile: Profile 1 from ::1
 2025-05-29 22:50:37,166 [INFO] Loaded data from trading_journal_data.json, size: 207.0 B
 2025-05-29 22:50:37,167 [INFO] Sending response for /api/get_data/Profile 1, size: 106.0 B
+2025-05-29 22:52:20,261 [INFO] Serving index.html, size: 56.1 KB
+2025-05-29 22:52:20,754 [INFO] Received GET request for profile: Profile 1 from ::1
+2025-05-29 22:52:20,754 [INFO] Loaded data from trading_journal_data.json, size: 207.0 B
+2025-05-29 22:52:20,756 [INFO] Sending response for /api/get_data/Profile 1, size: 106.0 B
+2025-05-29 22:54:22,729 [INFO] Serving index.html, size: 56.1 KB
+2025-05-29 22:54:23,146 [INFO] Received GET request for profile: Profile 1 from ::1
+2025-05-29 22:54:23,149 [INFO] Loaded data from trading_journal_data.json, size: 207.0 B
+2025-05-29 22:54:23,151 [INFO] Sending response for /api/get_data/Profile 1, size: 106.0 B
+2025-05-29 22:54:37,114 [INFO] Serving index.html, size: 56.1 KB
+2025-05-29 22:54:37,526 [INFO] Received GET request for profile: Profile 1 from ::1
+2025-05-29 22:54:37,528 [INFO] Loaded data from trading_journal_data.json, size: 207.0 B
+2025-05-29 22:54:37,528 [INFO] Sending response for /api/get_data/Profile 1, size: 106.0 B
