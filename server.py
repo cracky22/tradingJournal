@@ -21,7 +21,6 @@ app = Flask(__name__)
 DATA_FILE = 'trading_journal_data.json'
 
 def format_file_size(size_bytes):
-    """Convert bytes to human-readable format"""
     for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
         if size_bytes < 1024:
             return f"{size_bytes:.1f} {unit}"
