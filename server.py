@@ -15,7 +15,6 @@ import threading
 from collections import defaultdict
 from time import time as timestamp
 
-# Load environment variables
 from os import environ
 DATA_FILE = environ.get('TRADING_JOURNAL_DATA_FILE', 'trading_journal_data.json')
 HOST = environ.get('TRADING_JOURNAL_HOST', 'localhost')
@@ -25,7 +24,6 @@ LAST_LOG_FILE = environ.get('TRADING_JOURNAL_LAST_LOG_FILE', 'last.log')
 MAX_LOG_SIZE = int(environ.get('TRADING_JOURNAL_MAX_LOG_SIZE', 10 * 1024 * 1024))  # 10 MB
 BACKUP_COUNT = int(environ.get('TRADING_JOURNAL_LOG_BACKUP_COUNT', 5))
 
-# Configure logging with rotation and last log
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
@@ -33,7 +31,6 @@ stream_handler = logging.StreamHandler(sys.stdout)
 stream_handler.setFormatter(formatter)
 file_handler = RotatingFileHandler(LOG_FILE, maxBytes=MAX_LOG_SIZE, backupCount=BACKUP_COUNT)
 file_handler.setFormatter(formatter)
-# Clear last.log and set up handler
 if os.path.exists(LAST_LOG_FILE):
     os.remove(LAST_LOG_FILE)
 last_log_handler = logging.FileHandler(LAST_LOG_FILE)
@@ -43,7 +40,7 @@ logger.addHandler(file_handler)
 logger.addHandler(last_log_handler)
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+CORS(app)
 
 # Rate limiting setup (in-memory, per IP)
 REQUEST_LIMIT = 100  # Max requests per minute
@@ -103,7 +100,6 @@ def load_data():
 
 def save_data(data):
     try:
-        # Create backup
         backup_file = f"{DATA_FILE}.backup"
         if os.path.exists(DATA_FILE):
             shutil.copy2(DATA_FILE, backup_file)
@@ -114,13 +110,11 @@ def save_data(data):
         data_size = os.path.getsize(DATA_FILE)
         logger.info(f"Saved data to {DATA_FILE}, size: {format_file_size(data_size)}")
         
-        # Remove backup if save was successful
         if os.path.exists(backup_file):
             os.remove(backup_file)
             logger.info(f"Removed backup: {backup_file}")
     except Exception as e:
         logger.error(f"Error saving data: {str(e)}")
-        # Restore from backup if it exists
         if os.path.exists(backup_file):
             shutil.copy2(backup_file, DATA_FILE)
             logger.info(f"Restored data from backup: {backup_file}")
@@ -262,7 +256,6 @@ def api_docs():
         logger.error(f"Error serving API docs: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
-# Graceful shutdown
 server_thread = None
 stop_event = threading.Event()
 
@@ -281,11 +274,9 @@ if __name__ == '__main__':
     logger.info(f"Opening browser at {url}")
     webbrowser.open(url)
     
-    # Set up signal handlers for graceful shutdown
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
     
-    # Start server in a separate thread to allow graceful shutdown
     server_thread = threading.Thread(target=serve, args=(app,), kwargs={
         'host': HOST,
         'port': PORT,
@@ -295,7 +286,6 @@ if __name__ == '__main__':
     })
     server_thread.start()
     
-    # Wait for stop event
     try:
         while not stop_event.is_set():
             time.sleep(1)
