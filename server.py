@@ -19,14 +19,12 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 DATA_FILE = 'trading_journal_data.json'
 
-# Initialize JSON file if it doesn't exist
 def init_data_file():
     if not os.path.exists(DATA_FILE):
         with open(DATA_FILE, 'w') as f:
             json.dump({'profiles': {}, 'currentProfile': 'Profile 1'}, f)
         logger.info(f"Initialized new data file: {DATA_FILE}")
 
-# Load data from JSON file
 def load_data():
     try:
         with open(DATA_FILE, 'r') as f:
@@ -39,7 +37,6 @@ def load_data():
         init_data_file()
         return {'profiles': {}, 'currentProfile': 'Profile 1'}
 
-# Save data to JSON file
 def save_data(data):
     try:
         with open(DATA_FILE, 'w') as f:
@@ -62,7 +59,6 @@ def serve_index():
 @app.route('/api/submit_data', methods=['POST'])
 def submit_data():
     try:
-        # Log incoming request data size
         content_length = request.content_length or 0
         logger.info(f"Received POST request to /api/submit_data, size: {content_length} bytes")
         
@@ -72,10 +68,8 @@ def submit_data():
             logger.warning("Profile name missing in request")
             return jsonify({'error': 'Profile name is required'}), 400
         
-        # Load existing data
         stored_data = load_data()
         
-        # Update profile data
         stored_data['profiles'][profile_name] = {
             'trades': data.get('trades', {}),
             'tags': data.get('tags', []),
@@ -84,7 +78,6 @@ def submit_data():
         }
         stored_data['currentProfile'] = profile_name
         
-        # Save updated data
         save_data(stored_data)
         
         response = {'message': 'Data saved successfully'}
@@ -117,13 +110,12 @@ def get_data(profile_name):
 
 if __name__ == '__main__':
     init_data_file()
-    # Waitress configuration for multithreaded performance
     logger.info(f"Starting server with {os.cpu_count() or 1} threads")
     serve(
         app,
         host='localhost',
         port=5000,
-        threads=(os.cpu_count() or 1),  # Use number of CPU cores for threads
+        threads=(os.cpu_count() or 1),
         backlog=2048,
         ident='Waitress-Flask-Server'
     )
