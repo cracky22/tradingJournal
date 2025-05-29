@@ -1,0 +1,2 @@
+# tradingJournal
+tradingJournal von Maxi 
