@@ -1,6 +1,7 @@
 import json
 import os
 import logging
+import webbrowser
 from flask import Flask, send_file, request, jsonify
 from datetime import datetime
 import sys
@@ -19,6 +20,14 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 DATA_FILE = 'trading_journal_data.json'
 
+def format_file_size(size_bytes):
+    """Convert bytes to human-readable format"""
+    for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
+        if size_bytes < 1024:
+            return f"{size_bytes:.1f} {unit}"
+        size_bytes /= 1024
+    return f"{size_bytes:.1f} PB"
+
 def init_data_file():
     if not os.path.exists(DATA_FILE):
         with open(DATA_FILE, 'w') as f:
@@ -30,7 +39,7 @@ def load_data():
         with open(DATA_FILE, 'r') as f:
             data = json.load(f)
             data_size = os.path.getsize(DATA_FILE)
-            logger.info(f"Loaded data from {DATA_FILE}, size: {data_size} bytes")
+            logger.info(f"Loaded data from {DATA_FILE}, size: {format_file_size(data_size)}")
             return data
     except Exception as e:
         logger.error(f"Error loading data: {str(e)}")
@@ -42,7 +51,7 @@ def save_data(data):
         with open(DATA_FILE, 'w') as f:
             json.dump(data, f, indent=2)
         data_size = os.path.getsize(DATA_FILE)
-        logger.info(f"Saved data to {DATA_FILE}, size: {data_size} bytes")
+        logger.info(f"Saved data to {DATA_FILE}, size: {format_file_size(data_size)}")
     except Exception as e:
         logger.error(f"Error saving data: {str(e)}")
 
@@ -50,7 +59,7 @@ def save_data(data):
 def serve_index():
     try:
         file_size = os.path.getsize('index.html')
-        logger.info(f"Serving index.html, size: {file_size} bytes")
+        logger.info(f"Serving index.html, size: {format_file_size(file_size)}")
         return send_file('index.html')
     except Exception as e:
         logger.error(f"Error serving index.html: {str(e)}")
@@ -60,7 +69,7 @@ def serve_index():
 def submit_data():
     try:
         content_length = request.content_length or 0
-        logger.info(f"Received POST request to /api/submit_data, size: {content_length} bytes")
+        logger.info(f"Received POST request to /api/submit_data, size: {format_file_size(content_length)}")
         
         data = request.get_json()
         profile_name = data.get('currentProfile')
@@ -82,7 +91,7 @@ def submit_data():
         
         response = {'message': 'Data saved successfully'}
         response_size = len(json.dumps(response).encode('utf-8'))
-        logger.info(f"Sending response for /api/submit_data, size: {response_size} bytes")
+        logger.info(f"Sending response for /api/submit_data, size: {format_file_size(response_size)}")
         return jsonify(response), 200
     except Exception as e:
         logger.error(f"Error processing POST request: {str(e)}")
@@ -102,7 +111,7 @@ def get_data(profile_name):
         profile_data['currentProfile'] = profile_name
         
         response_size = len(json.dumps(profile_data).encode('utf-8'))
-        logger.info(f"Sending response for /api/get_data/{profile_name}, size: {response_size} bytes")
+        logger.info(f"Sending response for /api/get_data/{profile_name}, size: {format_file_size(response_size)}")
         return jsonify(profile_data), 200
     except Exception as e:
         logger.error(f"Error processing GET request for profile {profile_name}: {str(e)}")
@@ -110,11 +119,16 @@ def get_data(profile_name):
 
 if __name__ == '__main__':
     init_data_file()
+    host = 'localhost'
+    port = 2108
+    url = f'http://{host}:{port}'
     logger.info(f"Starting server with {os.cpu_count() or 1} threads")
+    logger.info(f"Opening browser at {url}")
+    webbrowser.open(url)
     serve(
         app,
-        host='localhost',
-        port=2108,
+        host=host,
+        port=port,
         threads=(os.cpu_count() or 1),
         backlog=2048,
         ident='Waitress-Flask-Server'
