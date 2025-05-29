@@ -114,7 +114,7 @@ if __name__ == '__main__':
     serve(
         app,
         host='localhost',
-        port=5000,
+        port=2108,
         threads=(os.cpu_count() or 1),
         backlog=2048,
         ident='Waitress-Flask-Server'
