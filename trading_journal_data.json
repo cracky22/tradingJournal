@@ -7,23 +7,7 @@
       "profilesList": [
         "Profile 1"
       ]
-    },
-    "Profile 2": {
-      "trades": {},
-      "tags": [],
-      "strategies": [
-        "Trendfolge",
-        "Volumen",
-        "Fibonacci",
-        "Sweep",
-        "Range",
-        "RAIN"
-      ],
-      "profilesList": [
-        "Profile 1",
-        "Profile 2"
-      ]
     }
   },
-  "currentProfile": "Profile 2"
+  "currentProfile": "Profile 1"
 }
