@@ -11,23 +11,16 @@
                 var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
                 var firstSheetName = workbook.SheetNames[0];
                 var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
                 var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
                 var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
                 var headerRowIndex = filteredData.findIndex((row, index) =>
                   row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
                 );
-                // Fallback
                 if (headerRowIndex === -1 || headerRowIndex > 25) {
                   headerRowIndex = 0;
                 }
 
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
                 csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
                 return csv;
             } catch (e) {
@@ -55,12 +48,15 @@
     }
     select {
       background-color: #4b5563; /* bg-gray-700 */
-      border: 1px solid #6b7280; /* border-gray-600 */
+      border: 3px solid #6b7280; /* border-gray-600 */
       color: #e5e7eb; /* text-gray-200 */
+    }
+    border3 {
+      border: 3px solid gray!important;
     }
     select:focus {
       outline: none;
-      ring: 2px solid #3b82f6; /* focus:ring-blue-500 */
+      ring: 3px solid #3b82f6; /* focus:ring-blue-500 */
     }
   </style>
 </head>
@@ -80,23 +76,15 @@
                 var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
                 var firstSheetName = workbook.SheetNames[0];
                 var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
                 var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
                 var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
                 var headerRowIndex = filteredData.findIndex((row, index) =>
                   row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
                 );
-                // Fallback
                 if (headerRowIndex === -1 || headerRowIndex > 25) {
                   headerRowIndex = 0;
                 }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
                 csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
                 return csv;
             } catch (e) {
@@ -151,7 +139,6 @@
           const response = await fetch(`/api/get_data/${encodeURIComponent(profile)}`);
           const data = await response.json();
           if (response.ok) {
-            // Ensure profiles is an array, fallback to ['Profile 1'] if undefined or not an array
             const profilesList = Array.isArray(data.profilesList) ? data.profilesList : ['Profile 1'];
             setProfiles(profilesList.length > 0 ? profilesList : ['Profile 1']);
             setTrades(data.trades || {});
@@ -164,7 +151,6 @@
         } catch (error) {
           console.error('Error loading data:', error);
           alert(`Failed to load profile data: ${error.message}`);
-          // Fallback to default state to prevent further errors
           setProfiles(['Profile 1']);
           setTrades({});
           setTagsState([]);
@@ -228,8 +214,6 @@
         setProfiles(updatedProfiles);
         setCurrentProfile(name);
         setShowProfileManager(false);
-
-        // Submit updated data
         await handleSubmitData();
       };
 
@@ -244,8 +228,6 @@
         setTagsState([]);
         setStrategies(['Trendfolge', 'Volumen', 'Fibonacci', 'Sweep', 'Range', 'RAIN']);
         setShowProfileManager(false);
-
-        // Submit new profile data
         await handleSubmitData();
       };
 
@@ -259,8 +241,6 @@
         setCurrentProfile(newCurrentProfile);
         await loadProfileData(newCurrentProfile);
         setShowProfileManager(false);
-
-        // Submit updated profiles list
         await handleSubmitData();
       };
 
@@ -354,7 +334,7 @@
                     value={newProfileName}
                     onChange={(e) => setNewProfileName(e.target.value)}
                     placeholder="New profile name"
-                    className="w-full p-2.5 bg-gray-800 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 mb-2"
+                    className="w-full p-2.5 bg-gray-800 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 mb-2 border3"
                   />
                   <button
                     onClick={handleRenameProfile}
