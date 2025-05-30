@@ -22,3 +22,20 @@
 2025-05-29 23:14:33,248 [INFO] Received GET request for profile: Profile 1 from ::1
 2025-05-29 23:14:33,250 [INFO] Loaded data from trading_journal_data.json, size: 207.0 B
 2025-05-29 23:14:33,251 [INFO] Sending response for /api/get_data/Profile 1, size: 106.0 B
+2025-05-29 23:17:53,999 [INFO] Received shutdown signal, stopping server...
+2025-05-29 23:17:59,003 [INFO] Received shutdown signal, stopping server...
+2025-05-29 23:18:32,603 [INFO] Starting server with 10 threads
+2025-05-29 23:18:32,604 [INFO] Opening browser at http://localhost:2108
+2025-05-29 23:18:32,758 [INFO] Serving index.html, size: 56.1 KB
+2025-05-29 23:18:33,612 [INFO] Received GET request for profile: Profile 1 from ::1
+2025-05-29 23:18:33,614 [INFO] Loaded data from trading_journal_data.json, size: 207.0 B
+2025-05-29 23:18:33,614 [INFO] Sending response for /api/get_data/Profile 1, size: 106.0 B
+2025-05-29 23:18:56,378 [INFO] Received shutdown signal, stopping server...
+2025-05-29 23:19:01,390 [INFO] Received shutdown signal, stopping server...
+2025-05-29 23:19:06,392 [INFO] Server stopped gracefully
+2025-05-30 09:47:00,637 [INFO] Starting server with 10 threads
+2025-05-30 09:47:00,638 [INFO] Opening browser at http://localhost:2108
+2025-05-30 09:47:00,899 [INFO] Serving index.html, size: 56.1 KB
+2025-05-30 09:47:01,868 [INFO] Received GET request for profile: Profile 1 from ::1
+2025-05-30 09:47:01,887 [INFO] Loaded data from trading_journal_data.json, size: 207.0 B
+2025-05-30 09:47:01,898 [INFO] Sending response for /api/get_data/Profile 1, size: 106.0 B
