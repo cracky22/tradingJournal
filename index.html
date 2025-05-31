@@ -9,7 +9,6 @@
   <script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.26.0/babel.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.5/dist/chart.umd.min.js"></script>
-  <!-- Ensure Chart.js version remains compatible with the application -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     input[type="date"]::-webkit-calendar-picker-indicator {
@@ -33,7 +32,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background-image: linear-gradient(to bottom, #1f2937, #111827); /* Fallback gradient */
+      background-image: linear-gradient(to bottom, #1f2937, #111827);
       background-size: cover;
       transform: translate3d(0, 0, 0);
       transition: transform 0.1s ease-out;
@@ -91,8 +90,8 @@
     const markets = ['NASDAQ', 'SP500'];
 
     function App() {
-      const [profiles, setProfiles] = useState(['Profile 1']);
-      const [currentProfile, setCurrentProfile] = useState('Profile 1');
+      const [profiles, setProfiles] = useState([]);
+      const [currentProfile, setCurrentProfile] = useState('');
       const [trades, setTrades] = useState({});
       const [tagsState, setTagsState] = useState([]);
       const [strategies, setStrategies] = useState(['Trendfolge', 'Volumen', 'Fibonacci', 'Sweep', 'Range', 'RAIN']);
@@ -111,10 +110,36 @@
       const [showProfileManager, setShowProfileManager] = useState(false);
       const [newProfileName, setNewProfileName] = useState('Profile 1');
       const [isSubmitting, setIsSubmitting] = useState(false);
-      const [isLoading, setIsLoading] = useState(false);
+      const [isLoading, setIsLoading] = useState(true);
+
+      const fetchProfiles = async () => {
+        setIsLoading(true);
+        try {
+          const response = await fetch('/api/get_profiles', {
+            signal: AbortSignal.timeout(10000),
+          });
+          if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            throw new Error(data.error || `HTTP error! Status: ${response.status}`);
+          }
+          const data = await response.json();
+          const profilesList = Array.isArray(data.profiles) && data.profiles.length > 0 ? data.profiles : ['Profile 1'];
+          setProfiles(profilesList);
+          setCurrentProfile(profilesList[0] || 'Profile 1');
+          await loadProfileData(profilesList[0] || 'Profile 1');
+        } catch (error) {
+          console.error('Error fetching profiles:', error);
+          alert(`Failed to fetch profiles: ${error.message || 'Network error'}`);
+          setProfiles(['Profile 1']);
+          setCurrentProfile('Profile 1');
+          await loadProfileData('Profile 1');
+        } finally {
+          setIsLoading(false);
+        }
+      };
 
       useEffect(() => {
-        loadProfileData(currentProfile);
+        fetchProfiles();
       }, []);
 
       useEffect(() => {
@@ -154,7 +179,7 @@
             throw new Error(data.error || `HTTP error! Status: ${response.status}`);
           }
           const data = await response.json();
-          const profilesList = Array.isArray(data.profilesList) ? data.profilesList : ['Profile 1'];
+          const profilesList = Array.isArray(data.profilesList) ? data.profilesList : profiles;
           setProfiles(profilesList.length > 0 ? profilesList : ['Profile 1']);
           setTrades(data.trades || {});
           setTagsState(Array.isArray(data.tags) ? data.tags : []);
@@ -177,7 +202,7 @@
         setIsSubmitting(true);
         try {
           const data = {
-            profiles: Array.isArray(profiles) ? profiles : ['Profile 1'],
+            profiles: profiles,
             currentProfile: currentProfile,
             trades: trades,
             tags: tagsState,
@@ -204,11 +229,10 @@
       };
 
       const handleProfileChange = async (profile) => {
-        if (!profile || !Array.isArray(profiles) || !profiles.includes(profile)) {
+        if (!profile || !profiles.includes(profile)) {
           console.warn('Invalid profile selection, resetting to default');
-          setProfiles(['Profile 1']);
-          setCurrentProfile('Profile 1');
-          await loadProfileData('Profile 1');
+          setCurrentProfile(profiles[0] || 'Profile 1');
+          await loadProfileData(profiles[0] || 'Profile 1');
           return;
         }
         setCurrentProfile(profile);
@@ -220,7 +244,7 @@
 
       const handleRenameProfile = async () => {
         const name = newProfileName.trim();
-        if (!name || name === currentProfile || !Array.isArray(profiles) || !profiles.includes(currentProfile)) return;
+        if (!name || name === currentProfile || profiles.includes(name)) return;
         const updatedProfiles = profiles.map(p => p === currentProfile ? name : p);
         setProfiles(updatedProfiles);
         setCurrentProfile(name);
@@ -230,8 +254,8 @@
 
       const handleAddProfile = async () => {
         const name = newProfileName.trim();
-        if (!name || (Array.isArray(profiles) && profiles.includes(name))) return;
-        const updatedProfiles = Array.isArray(profiles) ? [...profiles, name] : [name];
+        if (!name || profiles.includes(name)) return;
+        const updatedProfiles = [...profiles, name];
         setProfiles(updatedProfiles);
         setCurrentProfile(name);
         setTrades({});
@@ -242,7 +266,7 @@
       };
 
       const handleDeleteProfile = async () => {
-        if (!Array.isArray(profiles) || profiles.length <= 1) return;
+        if (profiles.length <= 1) return;
         if (!window.confirm(`Are you sure you want to delete the profile "${currentProfile}"?`)) return;
         const updatedProfiles = profiles.filter(p => p !== currentProfile);
         const newCurrentProfile = updatedProfiles[0] || 'Profile 1';
@@ -312,20 +336,22 @@
             <div className="w-full sm:w-16 md:w-56 bg-gray-800 p-4 flex flex-col smooth-transition z-10">
               <h1 className="text-2xl font-bold text-white mb-6 hidden sm:block">Trading Journal</h1>
               <h1 className="text-xl font-bold text-white mb-4 sm:hidden">TJ</h1>
-              <select
-                value={currentProfile}
-                onChange={(e) => handleProfileChange(e.target.value)}
-                className="w-full p-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 mb-4 smooth-transition"
-                aria-label="Select profile"
-              >
-                {Array.isArray(profiles) ? profiles.map((p) => (
-                  <option key={p} value={p}>
-                    {p}
-                  </option>
-                )) : (
-                  <option value="Profile 1">Profile 1</option>
-                )}
-              </select>
+              {isLoading ? (
+                <div className="text-gray-400">Loading profiles...</div>
+              ) : (
+                <select
+                  value={currentProfile}
+                  onChange={(e) => handleProfileChange(e.target.value)}
+                  className="w-full p-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 mb-4 smooth-transition"
+                  aria-label="Select profile"
+                >
+                  {profiles.map((p) => (
+                    <option key={p} value={p}>
+                      {p}
+                    </option>
+                  ))}
+                </select>
+              )}
               <button
                 onClick={() => setShowProfileManager(!showProfileManager)}
                 className={`w-full text-left py-2 px-4 rounded-lg smooth-transition ${showProfileManager ? 'bg-blue-600 text-white' : 'hover:bg-gray-700'}`}
@@ -339,7 +365,7 @@
                     value={newProfileName}
                     onChange={(e) => setNewProfileName(e.target.value)}
                     placeholder="New profile name"
-                    className="w-full p-2.5 bg-gray-800 border ring-2 ring-gray-500 border-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 text-gray-200 mb-2 border3 smooth-transition"
+                    className="w-full p-2.5 bg-gray-800 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 mb-2 smooth-transition"
                     aria-label="New profile name"
                   />
                   <button
@@ -363,14 +389,14 @@
                   <button
                     onClick={handleSubmitData}
                     disabled={isSubmitting}
-                    className={`w-full px-4 py-2 text-white rounded-lg smooth-transition ${isSubmitting ? 'bg-gray-900 cursor-not-allowed' : 'bg-gray-900 hover:bg-gray-600'}`}
+                    className={`w-full px-4 py-2 text-white rounded-lg smooth-transition ${isSubmitting ? 'bg-gray-600 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-500'}`}
                   >
                     {isSubmitting ? 'Submitting...' : 'Submit Data'}
                   </button>
                   <button
                     onClick={() => loadProfileData(currentProfile)}
                     disabled={isLoading}
-                    className={`w-full px-4 py-2 text-white rounded-lg mt-2 smooth-transition ${isLoading ? 'bg-gray-900 cursor-not-allowed' : 'bg-gray-900 hover:bg-gray-600'}`}
+                    className={`w-full px-4 py-2 text-white rounded-lg mt-2 smooth-transition ${isLoading ? 'bg-gray-600 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-500'}`}
                   >
                     {isLoading ? 'Loading...' : 'Get Data'}
                   </button>
@@ -395,7 +421,7 @@
                 <>
                   {view === 'dashboard' && <DashboardView t={trades} gc={getCData} gp={getProfit} gf={getFTrades} gtp={getTimePerfData} />}
                   {view === 'calendar' && <CalendarView t={trades} d={date} sd={setDate} gp={getProfit} m={month} y={year} sm={setMonth} sy={setYear} so={setOvDate} />}
-                  {view === 'trades' && <TradesView t={trades} at={addTrade} ut={updTrade} dt={delTrade} d={date} sd={setDate} tg={tagsState} ag={addTag} dg={delTag} st={strategies} edit={edit} setEdit={setEdit} editTrade={(trade, index) => setEdit({ ...trade, index })} />}
+                  {view === 'trades' && <TradesView t={trades} at={addTrade} ut={updTrade} dt={delTrade} d={date} sd={setDate} tg={tagsState} ag={addTag} dg={delTag} st={strategies} edit={edit} setEdit={setEdit} />}
                   {view === 'allTrades' && <AllTradesView t={trades} gf={getFTrades} fs={allTradesFStr} sfs={setAllTradesFStr} fm={allTradesFMkt} sfm={setAllTradesFMkt} ft={allTradesFTag} sft={setAllTradesFTag} fp={allTradesFPrd} sfp={setAllTradesFPrd} fst={allTradesFStart} sfst={setAllTradesFStart} fe={allTradesFEnd} sfe={setAllTradesFEnd} dt={delTrade} tg={tagsState} st={strategies} />}
                   {view === 'strategies' && <StrategiesView strategies={strategies} addStrategy={addStrategy} delStrategy={delStrategy} />}
                 </>
@@ -460,7 +486,7 @@
       );
     }
 
-    function TradesView({ t, at, ut, dt, d, sd, tg, ag, dg, st, edit, setEdit, editTrade }) {
+    function TradesView({ t, at, ut, dt, d, sd, tg, ag, dg, st, edit, setEdit }) {
       const [tradeType, setTradeType] = useState('Long');
       const [riskReward, setRiskReward] = useState('');
       const [strategy, setStrategy] = useState(st[0] || '');
@@ -613,7 +639,7 @@
                         type="file"
                         accept="image/*"
                         onChange={handleImageUpload}
-                        className="p-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-200 w-full smooth-transition"
+                        className="p-2 bg-gray-700 text-gray-200 w-full smooth-transition"
                         aria-label="Upload trade image"
                       />
                       {image && <img src={image} alt="Trade screenshot" className="mt-2 max-w-[250px] rounded-lg smooth-transition" />}
@@ -696,7 +722,11 @@
                     />
                     <button
                       onClick={() => {
-                        newTag.trim() && (ag(newTag.trim()), setNewTag(''));
+                        if (newTag.trim()) {
+                          ag(newTag.trim());
+                          setTags((p) => [...p, newTag.trim()]);
+                          setNewTag('');
+                        }
                       }}
                       className="px-4 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-500 text-sm smooth-transition"
                       type="button"
@@ -726,13 +756,13 @@
             </div>
             <div>
               <h3 className="text-xl font-semibold text-gray-300 mb-4">Trade List</h3>
-              <div>{(t[d] || []).map((x, i) => (
-                <div key={i} className="p-3.5 bg-gray-700 rounded-lg mb-1 smooth-transition">
+              {(t[d] || []).map((x, i) => (
+                <div key={i} className="p-3.5 bg-gray-700 rounded-lg mb-2 smooth-transition">
                   <p className="text-gray-200 text-base">
                     <strong>{(x.profitLossDollar || 0).toFixed(2)} $</strong> ({x.market}, R:R {x.riskReward || 0})
                   </p>
                   <p className="text-sm text-gray-400">Type: {x.tradeType || 'Long'}</p>
-                  <p className="text-sm text-gray-400">Main Reason: {x.strategy}</p>
+                  <p className="text-sm text-gray-400">Strategy: {x.strategy}</p>
                   <p className="text-sm text-gray-400">Tags: {(x.tags || []).join(', ')}</p>
                   <p className="text-sm text-gray-400">Duration: {x.tradeDuration || 0} min, Stars: {x.stars || 0}</p>
                   {x.image && <img src={x.image} alt="Trade screenshot" className="mt-2 max-w-[250px] rounded-lg smooth-transition" />}
@@ -740,10 +770,10 @@
                     <button
                       onClick={() => {
                         setEdit({ ...x, index: i });
-                        setMarket(x.market || markets[0] || '');
+                        setMarket(x.market || markets[0]);
                         setTradeType(x.tradeType || 'Long');
                         setRiskReward(x.riskReward || '');
-                        setStrategy(x.strategy || (st[0] || ''));
+                        setStrategy(x.strategy || st[0] || '');
                         setProfitLossDollar(x.profitLossDollar || '');
                         setTradeDuration(x.tradeDuration || '');
                         setReason(x.reason || '');
@@ -768,7 +798,7 @@
                     </button>
                   </div>
                 </div>
-              ))}</div>
+              ))}
             </div>
             <div>
               <h3 className="text-xl font-semibold text-gray-300 mb-4">Tags</h3>
@@ -810,7 +840,7 @@
                 <input
                   type="text"
                   value={newStrategy}
-                  onChange={(ev) => setNewStrategy(ev.target.value)}
+                  onChange={(e) => setNewStrategy(e.target.value)}
                   placeholder="New Strategy"
                   className="p-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 flex-1 smooth-transition"
                   aria-label="New strategy input"
@@ -839,6 +869,109 @@
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function AllTradesView({ t, gf, fs, sfs, fm, sfm, ft, sft, fp, sfp, fst, sfst, fe, sfe, dt, tg, st }) {
+      const trades = gf();
+      return (
+        <div className="bg-gray-800 rounded-lg p-6 smooth-transition">
+          <h2 className="text-2xl font-semibold text-white mb-6">All Trades</h2>
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <select
+                value={fm}
+                onChange={(e) => sfm(e.target.value)}
+                className="p-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 smooth-transition"
+                aria-label="Filter by market"
+              >
+                <option value="All">All Markets</option>
+                {markets.map((m) => (
+                  <option key={m} value={m}>{m}</option>
+                ))}
+              </select>
+              <select
+                value={fp}
+                onChange={(e) => sfp(e.target.value)}
+                className="p-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 smooth-transition"
+                aria-label="Filter by period"
+              >
+                <option value="All">All Periods</option>
+                {['Week', 'Month', 'Quarter'].map((p) => (
+                  <option key={p} value={p}>{p}</option>
+                ))}
+              </select>
+              <select
+                value={ft}
+                onChange={(e) => sft(e.target.value)}
+                className="p-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 smooth-transition"
+                aria-label="Filter by tag"
+              >
+                <option value="All">All Tags</option>
+                {tg.map((tag) => (
+                  <option key={tag} value={tag}>{tag}</option>
+                ))}
+              </select>
+              <select
+                value={fs === null ? '' : fs}
+                onChange={(e) => sfs(e.target.value === '' ? null : parseInt(e.target.value))}
+                className="p-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 smooth-transition"
+                aria-label="Filter by stars"
+              >
+                <option value="">All Stars</option>
+                {[1, 2, 3, 4, 5].map((s) => (
+                  <option key={s} value={s}>{s} Stars</option>
+                ))}
+              </select>
+              <input
+                type="date"
+                value={fst}
+                onChange={(e) => sfst(e.target.value)}
+                className="p-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 smooth-transition"
+                aria-label="Filter by start date"
+              />
+              <input
+                type="date"
+                value={fe}
+                onChange={(e) => sfe(e.target.value)}
+                className="p-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 smooth-transition"
+                aria-label="Filter by end date"
+              />
+            </div>
+            <div>
+              <h3 className="text-xl font-semibold text-gray-300 mb-4">Trade List</h3>
+              {trades.length === 0 ? (
+                <p className="text-gray-400">No trades match the selected filters.</p>
+              ) : (
+                trades.map((x, i) => (
+                  <div key={`${x.date}-${i}`} className="p-3.5 bg-gray-700 rounded-lg mb-2 smooth-transition">
+                    <p className="text-gray-200 text-base">
+                      <strong>{(x.profitLossDollar || 0).toFixed(2)} $</strong> ({x.market}, R:R {x.riskReward || 0})
+                    </p>
+                    <p className="text-sm text-gray-400">Date: {x.date}</p>
+                    <p className="text-sm text-gray-400">Type: {x.tradeType || 'Long'}</p>
+                    <p className="text-sm text-gray-400">Strategy: {x.strategy}</p>
+                    <p className="text-sm text-gray-400">Tags: {(x.tags || []).join(', ')}</p>
+                    <p className="text-sm text-gray-400">Duration: {x.tradeDuration || 0} min, Stars: {x.stars || 0}</p>
+                    {x.image && <img src={x.image} alt="Trade screenshot" className="mt-2 max-w-[250px] rounded-lg smooth-transition" />}
+                    <div className="mt-2">
+                      <button
+                        onClick={() => {
+                          if (window.confirm(`Are you sure you want to delete this trade?`)) {
+                            dt(x.date, trades.indexOf(x));
+                          }
+                        }}
+                        className="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-500 text-sm smooth-transition"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
@@ -891,7 +1024,7 @@
               responsive: true,
               scales: {
                 y: { title: { display: true, text: 'Profit ($)', color: '#d1d5db' }, grid: { display: true, color: '#4b5563' }, ticks: { color: '#d1d5db' } },
-                x: { display: true, title: { display: true, text: 'Trades', color: '#d1d5db' }, grid: { display: true, color: '#4b5563' }, ticks: { color: '#d1d5db' } },
+                x: { title: { display: true, text: 'Trades', color: '#d1d5db' }, grid: { display: true, color: '#4b5563' }, ticks: { color: '#d1d5db' } },
               },
               plugins: {
                 legend: { labels: { color: '#d1d5db' } },
@@ -1018,7 +1151,7 @@
               responsive: true,
               scales: {
                 y: { title: { display: true, text: 'Profit ($)', color: '#d1d5db' }, grid: { display: true, color: '#4b5563' }, ticks: { color: '#d1d5db' } },
-                x: { display: true, title: { display: true, text: 'Trades', color: '#d1d5db' }, grid: { display: true, color: '#4b5563' }, ticks: { color: '#d1d5db' } },
+                x: { title: { display: true, text: 'Trades', color: '#d1d5db' }, grid: { display: true, color: '#4b5563' }, ticks: { color: '#d1d5db' } },
               },
               plugins: {
                 legend: { labels: { color: '#d1d5db' } },
@@ -1026,7 +1159,10 @@
                   mode: 'index',
                   intersect: false,
                   callbacks: {
-                    label: (c) => (c.dataIndex === 0 ? 'Profit: 0.00 $' : `Profit: ${c.parsed.y.toFixed(2)} $ (Trade: ${c.dataset.tradeData[c.dataIndex]?.profitLossDollar?.toFixed(2) || 'N/A'} $)`)
+                    label: (c) =>
+                      c.dataIndex === 0
+                        ? 'Profit: 0.00 $'
+                        : `Profit: ${c.parsed.y.toFixed(2)} $ (Trade: ${c.dataset.tradeData[c.dataIndex]?.profitLossDollar?.toFixed(2) || 'N/A'} $)`,
                   },
                 },
               },
@@ -1053,188 +1189,11 @@
         <div className="bg-gray-800 rounded-lg p-6 smooth-transition">
           <div className="flex justify-between mb-6">
             <h3 className="text-2xl font-semibold text-white">Day Overview: {d}</h3>
-            <div className="flex space-x-2">
-              <button
-                onClick={() => sd(null)}
-                className="px-4 py-1.5 bg-gray-600 text-white rounded-lg hover:bg-gray-500 text-sm smooth-transition"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {[
-                { l: 'Total Profit/Loss', v: tp.toFixed(2) + ' $', c: tp >= 0 ? 'text-green-500' : 'text-red-500' },
-                { l: 'Win Rate', v: `${wr.toFixed(2)}%` },
-                { l: 'Profit Factor', v: isFinite(pf) ? pf.toFixed(2) : '0.00' },
-                { l: 'Total Trades', v: tt },
-                { l: 'Average Profit/Trade', v: `${ap.toFixed(2)} $` },
-                { l: 'Average Win', v: `${aw.toFixed(2)} $` },
-                { l: 'Max Win Trade', v: `${mw.toFixed(2)} $` },
-                { l: 'Average Loss', v: `${al.toFixed(2)} $` },
-                { l: 'Max Loss Trade', v: `${ml.toFixed(2)} $` },
-                { l: 'Max Drawdown', v: `${(-md).toFixed(2)} $` },
-                { l: 'Avg Trade Duration', v: `${ad.toFixed(2)} min` },
-                { l: 'Long Win Rate', v: `${longWR.toFixed(2)}%` },
-                { l: 'Short Win Rate', v: `${shortWR.toFixed(2)}%` },
-              ].map(({ l, v, c }) => (
-                <div key={l} className="p-3 bg-gray-700 rounded-lg border border-gray-600 smooth-transition">
-                  <p className="text-lg font-semibold text-gray-300">{l}</p>
-                  <p className={c || 'text-gray-200'}>{v}</p>
-                </div>
-              ))}
-            </div>
-            {dtTrades.length > 0 && (
-              <div className="bg-gray-800 rounded-lg p-4 smooth-transition">
-                <h3 className="text-lg font-semibold text-gray-300 mb-4">Profit (Day)</h3>
-                <canvas id={`dayChart-${d}`}></canvas>
-              </div>
-            )}
-            {dtTrades.length > 0 && (
-              <div>
-                <h3 className="text-xl font-semibold text-gray-300 mb-4">Trade List</h3>
-                <div>
-                  {dtTrades.map((x, i) => (
-                    <div key={i} className="p-3.5 bg-gray-700 rounded-lg mb-1 smooth-transition">
-                      <p className="text-gray-200 text-base">
-                        <strong>{(x.profitLossDollar || 0).toFixed(2)} $</strong> ({x.market}, R:R {x.riskReward || 0})
-                      </p>
-                      <p className="text-sm text-gray-400">Type: {x.tradeType || 'Long'}</p>
-                      <p className="text-sm text-gray-400">Main Reason: {x.strategy}</p>
-                      <p className="text-sm text-gray-400">Tags: {(x.tags || []).join(', ')}</p>
-                      <p className="text-sm text-gray-400">Duration: {x.tradeDuration || 0} min, Stars: {x.stars || 0}</p>
-                      {x.image && (
-                        <img
-                          src={x.image}
-                          alt="Trade screenshot"
-                          className="mt-2 max-w-[250px] rounded-lg cursor-pointer smooth-transition"
-                          onClick={() => setSelectedImage(x.image)}
-                        />
-                      )}
-                      <div className="mt-2">
-                        <button
-                          onClick={() => handleDeleteTrade(i)}
-                          className="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-500 text-sm smooth-transition"
-                          aria-label="Delete trade"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-          {selectedImage && (
-            <div
-              className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 smooth-transition"
-              onClick={() => setSelectedImage(null)}
-              role="dialog"
-              aria-label="Enlarged trade image"
-            >
-              <img src={selectedImage} alt="Enlarged Trade screenshot" className="max-h-[90vh] max-w-[90vw] smooth-transition" />
-            </div>
-          )}
-        </div>
-      );
-    }
-
-    function AllTradesView({ t, gf, fs, sfs, fm, sfm, ft, sft, fp, sfp, fst, sfst, fe, sfe, dt, tg, st }) {
-      const { tp, tt, wr, ap, aw, al, mw, ml, md, pf, t: f } = calcStats(gf());
-      const sp = st.reduce((a, s) => {
-        const st = f.filter((x) => x.strategy === s);
-        a[s] = { p: st.reduce((s, x) => s + (x.profitLossDollar || 0), 0), w: st.length > 0 ? (st.filter((x) => (x.profitLossDollar || 0) > 0).length / st.length) * 100 : 0, t: st.length };
-        return a;
-      }, {});
-      const clearFilters = () => {
-        sfm('All');
-        sft('All');
-        sfs(null);
-        sfp('All');
-        sfst('');
-        sfe('');
-      };
-
-      return (
-        <div className="bg-gray-800 rounded-lg p-6 smooth-transition">
-          <h2 className="text-2xl font-semibold text-white mb-6">All Trades</h2>
-          <div className="flex flex-col sm:flex-row sm:space-x-4 mb-6 flex-wrap gap-2 sm:gap-4">
-            <input
-              type="date"
-              value={fst}
-              onChange={(e) => sfst(e.target.value)}
-              className="p-2.5 bg-gray-700 border border-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 w-full sm:w-auto smooth-transition"
-              aria-label="Filter by start date"
-            />
-            <input
-              type="date"
-              value={fe}
-              onChange={(e) => sfe(e.target.value)}
-              className="p-2.5 bg-gray-700 border border-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 w-full sm:w-auto smooth-transition"
-              aria-label="Filter by end date"
-            />
-            <select
-              key="market-filter"
-              value={fm}
-              onChange={(e) => sfm(e.target.value)}
-              className="p-2.5 bg-gray-700 border border-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 w-full sm:w-auto smooth-transition"
-              aria-label="Filter by market"
-            >
-              <option value="All">All Markets</option>
-              {markets.map((x) => (
-                <option key={`market-${x}`} value={x}>
-                  {x}
-                </option>
-              ))}
-            </select>
-            <select
-              key="period-filter"
-              value={fp}
-              onChange={(e) => sfp(e.target.value)}
-              className="p-2.5 bg-gray-700 border border-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 w-full sm:w-auto smooth-transition"
-              aria-label="Filter by period"
-            >
-              <option value="All">All Time</option>
-              <option value="Week">This Week</option>
-              <option value="Month">Last Month</option>
-              <option value="Quarter">Last Quarter</option>
-            </select>
-            <select
-              key="tag-filter"
-              value={ft}
-              onChange={(e) => sft(e.target.value)}
-              className="p-2.5 bg-gray-700 border border-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 w-full sm:w-auto smooth-transition"
-              aria-label="Filter by tag"
-            >
-              <option value="All">All Tags</option>
-              {tg.map((x) => (
-                <option key={`tag-${x}`} value={x}>
-                  {x}
-                </option>
-              ))}
-            </select>
-            <select
-              key="rating-filter"
-              value={fs ?? ''}
-              onChange={(e) => sfs(e.target.value ? parseInt(e.target.value) : null)}
-              className="p-2.5 bg-gray-700 border border-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 w-full sm:w-auto smooth-transition"
-              aria-label="Filter by rating"
-            >
-              <option value="">All Ratings</option>
-              {[1, 2, 3, 4, 5].map((s) => (
-                <option key={`rating-${s}`} value={s}>
-                  {s} Stars
-                </option>
-              ))}
-            </select>
             <button
-              onClick={clearFilters}
-              className="p-2.5 bg-gray-600 text-white rounded-lg hover:bg-gray-500 text-sm smooth-transition"
-              aria-label="Clear all filters"
+              onClick={() => sd(null)}
+              className="px-4 py-1.5 bg-gray-600 text-white rounded-lg hover:bg-gray-500 text-sm smooth-transition"
             >
-              Clear Filters
+              Close
             </button>
           </div>
           <div className="space-y-6">
@@ -1246,56 +1205,72 @@
                 { l: 'Total Trades', v: tt },
                 { l: 'Average Profit/Trade', v: `${ap.toFixed(2)} $` },
                 { l: 'Average Win', v: `${aw.toFixed(2)} $` },
-                { l: 'Max Win Trade', v: `${mw.toFixed(2)} $` },
                 { l: 'Average Loss', v: `${al.toFixed(2)} $` },
+                { l: 'Max Win Trade', v: `${mw.toFixed(2)} $` },
                 { l: 'Max Loss Trade', v: `${ml.toFixed(2)} $` },
                 { l: 'Max Drawdown', v: `${(-md).toFixed(2)} $` },
+                { l: 'Average Duration', v: `${ad.toFixed(2)} min` },
+                { l: 'Long Win Rate', v: `${longWR.toFixed(2)}%` },
+                { l: 'Short Win Rate', v: `${shortWR.toFixed(2)}%` },
               ].map(({ l, v, c }) => (
-                <div key={l} className="bg-gray-800 rounded-lg p-3 border border-gray-600 smooth-transition">
+                <div key={l} className="p-3 bg-gray-700 rounded-lg border border-gray-600 smooth-transition">
                   <p className="text-lg font-semibold text-gray-300">{l}</p>
                   <p className={c || 'text-gray-200'}>{v}</p>
                 </div>
               ))}
             </div>
-            <div>
-              <h3 className="text-xl font-semibold text-gray-300 mb-4">Strategy Performance</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {Object.entries(sp).map(([s, { p, w, t }]) => (
-                  <div key={s} className="p-3.5 bg-gray-700 rounded-lg smooth-transition">
-                    <p className="text-gray-200 text-base">
-                      <strong>{p.toFixed(2)} $</strong> ({w.toFixed(2)}% WR, {t} Trades)
-                    </p>
-                  </div>
-                ))}
+            {dtTrades.length > 0 && (
+              <div className="bg-gray-800 rounded-lg p-4 smooth-transition">
+                <h3 className="text-lg font-semibold text-gray-300 mb-4">Profit</h3>
+                <canvas id={`dayChart-${d}`}></canvas>
               </div>
-            </div>
-            <div>
-              <h3 className="text-xl font-semibold text-gray-300 mb-4">Trade List</h3>
+            )}
+            {dtTrades.length > 0 && (
               <div>
-                {f.map((x, i) => (
-                  <div key={i} className="p-3.5 bg-gray-700 rounded-lg mb-1 smooth-transition">
+                <h3 className="text-xl font-semibold text-gray-300 mb-4">Trade List</h3>
+                {dtTrades.map((x, i) => (
+                  <div key={i} className="p-3.5 bg-gray-700 rounded-lg mb-2 smooth-transition">
                     <p className="text-gray-200 text-base">
                       <strong>{(x.profitLossDollar || 0).toFixed(2)} $</strong> ({x.market}, R:R {x.riskReward || 0})
                     </p>
                     <p className="text-sm text-gray-400">Type: {x.tradeType || 'Long'}</p>
-                    <p className="text-sm text-gray-400">Date: {x.date}</p>
+                    <p className="text-sm text-gray-400">Strategy: {x.strategy}</p>
                     <p className="text-sm text-gray-400">Tags: {(x.tags || []).join(', ')}</p>
-                    <button
-                      onClick={() => {
-                        if (window.confirm(`Are you sure you want to delete this trade from ${x.date}?`)) {
-                          dt(x.date, i);
-                        }
-                      }}
-                      className="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-500 mt-2 text-sm smooth-transition"
-                      aria-label="Delete trade"
-                    >
-                      Delete
-                    </button>
+                    <p className="text-sm text-gray-400">Duration: {x.tradeDuration || 0} min, Stars: {x.stars || 0}</p>
+                    {x.image && (
+                      <img
+                        src={x.image}
+                        alt="Trade screenshot"
+                        className="mt-2 max-w-[250px] rounded-lg cursor-pointer smooth-transition"
+                        onClick={() => setSelectedImage(x.image)}
+                      />
+                    )}
+                    <div className="mt-2">
+                      <button
+                        onClick={() => handleDeleteTrade(i)}
+                        className="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-500 text-sm smooth-transition"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
-            </div>
+            )}
           </div>
+          {selectedImage && (
+            <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 smooth-transition">
+              <div className="relative">
+                <img src={selectedImage} alt="Full trade screenshot" className="max-w-full max-h-screen rounded-lg smooth-transition" />
+                <button
+                  onClick={() => setSelectedImage(null)}
+                  className="absolute top-2 right-2 px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-500 text-sm smooth-transition"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       );
     }
