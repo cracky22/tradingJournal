@@ -1,0 +1,12 @@
+2025-05-31 15:53:15,493 [INFO] Starting server with 10 threads
+2025-05-31 15:53:15,494 [INFO] Opening browser at http://localhost:2108
+2025-05-31 15:53:15,678 [INFO] Serving index.html, size: 68.2 KB
+2025-05-31 15:53:22,717 [INFO] Serving index.html, size: 57.0 KB
+2025-05-31 15:53:23,010 [INFO] Received GET request for profile: Profile 1 from ::1
+2025-05-31 15:53:23,015 [INFO] Loaded data from trading_journal_data.json, size: 207.0 B
+2025-05-31 15:53:23,016 [INFO] Sending response for /api/get_data/Profile 1, size: 106.0 B
+2025-05-31 15:53:25,065 [INFO] Serving index.html, size: 57.0 KB
+2025-05-31 15:53:25,247 [INFO] Received GET request for profile: Profile 1 from ::1
+2025-05-31 15:53:25,255 [INFO] Loaded data from trading_journal_data.json, size: 207.0 B
+2025-05-31 15:53:25,257 [INFO] Sending response for /api/get_data/Profile 1, size: 106.0 B
+2025-05-31 15:54:16,017 [INFO] Received shutdown signal, stopping server...
