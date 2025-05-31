@@ -1,0 +1,18 @@
+2025-05-31 15:06:19,176 [INFO] Starting server with 10 threads
+2025-05-31 15:06:19,177 [INFO] Opening browser at http://localhost:2108
+2025-05-31 15:06:19,417 [INFO] Serving index.html, size: 46.4 KB
+2025-05-31 15:06:19,979 [INFO] Received GET request for profile: Profile 1 from ::1
+2025-05-31 15:06:19,989 [INFO] Loaded data from trading_journal_data.json, size: 207.0 B
+2025-05-31 15:06:19,990 [INFO] Sending response for /api/get_data/Profile 1, size: 106.0 B
+2025-05-31 15:06:24,360 [INFO] Received GET request for profile: Profile 1 from ::1
+2025-05-31 15:06:24,366 [INFO] Loaded data from trading_journal_data.json, size: 207.0 B
+2025-05-31 15:06:24,368 [INFO] Sending response for /api/get_data/Profile 1, size: 106.0 B
+2025-05-31 15:06:25,244 [INFO] Received GET request for profile: Profile 1 from ::1
+2025-05-31 15:06:25,250 [INFO] Loaded data from trading_journal_data.json, size: 207.0 B
+2025-05-31 15:06:25,252 [INFO] Sending response for /api/get_data/Profile 1, size: 106.0 B
+2025-05-31 15:06:25,806 [INFO] Received POST request to /api/submit_data from ::1, size: 93.0 B
+2025-05-31 15:06:25,817 [INFO] Loaded data from trading_journal_data.json, size: 207.0 B
+2025-05-31 15:06:25,834 [INFO] Created backup: trading_journal_data.json.backup
+2025-05-31 15:06:25,836 [INFO] Saved data to trading_journal_data.json, size: 207.0 B
+2025-05-31 15:06:25,839 [INFO] Removed backup: trading_journal_data.json.backup
+2025-05-31 15:06:25,840 [INFO] Sending response for /api/submit_data, size: 38.0 B
