@@ -8,21 +8,15 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    input[type="date"]::-webkit-calendar-picker-indicator {
-      filter: invert(1);
+    /* Apple-inspired glassmorphism */
+    .glassmorphism {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
     }
-    select {
-      background-color: #4b5563;
-      border: 3px solid #6b7280;
-      color: #e5e7eb;
-    }
-    .border3 {
-      border: 3px solid gray !important;
-    }
-    select:focus {
-      outline: none;
-      ring: 3px solid #3b82f6;
-    }
+
+    /* Parallax layers */
     .parallax-bg {
       position: fixed;
       top: 0;
@@ -32,41 +26,107 @@
       background-image: url('background.jpg');
       background-size: cover;
       transform: translate3d(0, 0, 0);
-      transition: transform 0.1s ease-out;
+      transition: transform 0.3s ease-out;
+      z-index: -2;
+    }
+
+    .parallax-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(to bottom, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.4));
+      transform: translate3d(0, 0, 0);
+      transition: transform 0.4s ease-out;
       z-index: -1;
     }
+
+    /* Animations */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes scaleIn {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .animate-fadeInUp {
+      animation: fadeInUp 0.6s ease-out forwards;
+    }
+
+    .animate-scaleIn {
+      animation: scaleIn 0.5s ease-out forwards;
+    }
+
+    .hover-scale {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .hover-scale:hover {
+      transform: scale(1.02);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Input and select styling */
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(0.8);
+    }
+
+    select, input {
+      background-color: rgba(75, 85, 99, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #e5e7eb;
+      transition: all 0.3s ease;
+    }
+
+    select:focus, input:focus {
+      outline: none;
+      ring: 2px solid #3b82f6;
+      background-color: rgba(75, 85, 99, 0.9);
+    }
+
+    /* Smooth transitions */
     .smooth-transition {
       transition: all 0.3s ease-in-out;
+    }
+
+    /* Apple-like typography */
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
   </style>
 </head>
 <body class="bg-gray-900 text-gray-200">
   <div class="parallax-bg"></div>
+  <div class="parallax-overlay"></div>
   <div class="min-h-screen flex flex-col sm:flex-row relative">
     <!-- Sidebar -->
-    <div class="w-full sm:w-16 md:w-56 bg-gray-800 p-4 flex flex-col smooth-transition z-10">
+    <div class="w-full sm:w-16 md:w-56 glassmorphism p-4 flex flex-col smooth-transition z-10 animate-fadeInUp">
       <h1 class="text-2xl font-bold text-white mb-6 hidden sm:block">Trading Journal</h1>
       <h1 class="text-xl font-bold text-white mb-4 sm:hidden">TJ</h1>
-      <select id="profileSelect" class="w-full p-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 mb-4 smooth-transition">
+      <select id="profileSelect" class="w-full p-2.5 glassmorphism rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 mb-4 smooth-transition animate-scaleIn">
         <option value="Profile 1">Profile 1</option>
       </select>
-      <button id="manageProfilesBtn" class="w-full text-left py-2 px-4 rounded-lg hover:bg-gray-700 smooth-transition">Manage Profiles</button>
-      <div id="profileManager" class="hidden mb-4 p-4 bg-gray-700 rounded-lg smooth-transition">
-        <input id="newProfileName" type="text" placeholder="New profile name" class="w-full p-2.5 bg-gray-800 border ring-2 ring-gray-500 border-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 text-gray-200 mb-2 border3 smooth-transition">
-        <button id="renameProfileBtn" class="w-full px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-600 mb-2 smooth-transition">Rename Profile</button>
-        <button id="addProfileBtn" class="w-full px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-600 mb-2 smooth-transition">Add New Profile</button>
-        <button id="deleteProfileBtn" class="w-full px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-red-700 mb-2 smooth-transition">Delete Profile</button>
-        <button id="submitDataBtn" class="w-full px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-600 smooth-transition">Submit Data</button>
-        <button id="getDataBtn" class="w-full px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-600 mt-2 smooth-transition">Get Data</button>
+      <button id="manageProfilesBtn" class="w-full text-left py-2 px-4 rounded-lg hover:bg-gray-700 hover-scale smooth-transition">Manage Profiles</button>
+      <div id="profileManager" class="hidden mb-4 p-4 glassmorphism rounded-lg smooth-transition animate-scaleIn">
+        <input id="newProfileName" type="text" placeholder="New profile name" class="w-full p-2.5 glassmorphism rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 text-gray-200 mb-2 smooth-transition">
+        <button id="renameProfileBtn" class="w-full px-4 py-2 glassmorphism text-white rounded-lg hover:bg-gray-600 hover-scale mb-2 smooth-transition">Rename Profile</button>
+        <button id="addProfileBtn" class="w-full px-4 py-2 glassmorphism text-white rounded-lg hover:bg-gray-600 hover-scale mb-2 smooth-transition">Add New Profile</button>
+        <button id="deleteProfileBtn" class="w-full px-4 py-2 glassmorphism text-white rounded-lg hover:bg-red-700 hover-scale mb-2 smooth-transition">Delete Profile</button>
+        <button id="submitDataBtn" class="w-full px-4 py-2 glassmorphism text-white rounded-lg hover:bg-gray-600 hover-scale smooth-transition">Submit Data</button>
+        <button id="getDataBtn" class="w-full px-4 py-2 glassmorphism text-white rounded-lg hover:bg-gray-600 hover-scale mt-2 smooth-transition">Get Data</button>
       </div>
-      <button id="dashboardBtn" class="w-full text-left py-2 px-4 rounded-lg bg-blue-600 text-white smooth-transition">Dashboard</button>
-      <button id="calendarBtn" class="w-full text-left py-2 px-4 rounded-lg hover:bg-gray-700 smooth-transition">Calendar</button>
-      <button id="tradesBtn" class="w-full text-left py-2 px-4 rounded-lg hover:bg-gray-700 smooth-transition">Trades</button>
-      <button id="allTradesBtn" class="w-full text-left py-2 px-4 rounded-lg hover:bg-gray-700 smooth-transition">All Trades</button>
-      <button id="strategiesBtn" class="w-full text-left py-2 px-4 rounded-lg hover:bg-gray-700 smooth-transition">Strategies</button>
+      <button id="dashboardBtn" class="w-full text-left py-2 px-4 rounded-lg bg-blue-600 text-white hover-scale smooth-transition">Dashboard</button>
+      <button id="calendarBtn" class="w-full text-left py-2 px-4 rounded-lg hover:bg-gray-700 hover-scale smooth-transition">Calendar</button>
+      <button id="tradesBtn" class="w-full text-left py-2 px-4 rounded-lg hover:bg-gray-700 hover-scale smooth-transition">Trades</button>
+      <button id="allTradesBtn" class="w-full text-left py-2 px-4 rounded-lg hover:bg-gray-700 hover-scale smooth-transition">All Trades</button>
+      <button id="strategiesBtn" class="w-full text-left py-2 px-4 rounded-lg hover:bg-gray-700 hover-scale smooth-transition">Strategies</button>
     </div>
     <!-- Main Content -->
-    <div id="mainContent" class="flex-1 p-6 overflow-y-auto smooth-transition z-10"></div>
+    <div id="mainContent" class="flex-1 p-6 overflow-y-auto z-10"></div>
   </div>
 
   <script>
@@ -144,11 +204,13 @@
     const strategiesBtn = document.getElementById('strategiesBtn');
     const mainContent = document.getElementById('mainContent');
 
-    // Parallax Effect
+    // Enhanced Parallax Effect
     window.addEventListener('scroll', () => {
       const parallaxBg = document.querySelector('.parallax-bg');
+      const parallaxOverlay = document.querySelector('.parallax-overlay');
       const scrollPosition = window.pageYOffset;
       parallaxBg.style.transform = `translate3d(0, ${scrollPosition * 0.5}px, 0)`;
+      parallaxOverlay.style.transform = `translate3d(0, ${scrollPosition * 0.3}px, 0)`;
     });
 
     // Utility Functions
@@ -228,23 +290,23 @@
       const { tp, tt, wr, ap, aw, al, mw, ml, md, pf, longWR, shortWR } = calcStats(filteredTrades);
       const chartData = getCData(filteredTrades);
       mainContent.innerHTML = `
-        <div class="space-y-6 smooth-transition">
+        <div class="space-y-6 smooth-transition animate-fadeInUp">
           <h2 class="text-2xl font-semibold text-white">Dashboard</h2>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="bg-gray-800 rounded-lg p-3 border border-gray-600 smooth-transition">
+            <div class="glassmorphism rounded-lg p-3 border border-gray-600 hover-scale smooth-transition animate-scaleIn">
               <p class="text-lg font-semibold text-gray-300">Total Profit/Loss</p>
-              <p class="${tp >= 0 ? 'text-green-500' : 'text-red-500'}">${tp.toFixed(2)} $</p>
+              <p class="${tp >= 0 ? 'text-green-400' : 'text-red-400'}">${tp.toFixed(2)} $</p>
             </div>
-            <div class="bg-gray-800 rounded-lg p-3 border border-gray-600 smooth-transition">
+            <div class="glassmorphism rounded-lg p-3 border border-gray-600 hover-scale smooth-transition animate-scaleIn">
               <p class="text-lg font-semibold text-gray-300">Win Rate</p>
               <p class="text-gray-200">${wr.toFixed(2)}%</p>
             </div>
-            <div class="bg-gray-800 rounded-lg p-3 border border-gray-600 smooth-transition">
+            <div class="glassmorphism rounded-lg p-3 border border-gray-600 hover-scale smooth-transition animate-scaleIn">
               <p class="text-lg font-semibold text-gray-300">Profit Factor</p>
               <p class="text-gray-200">${isFinite(pf) ? pf.toFixed(2) : '0.00'}</p>
             </div>
           </div>
-          <div class="bg-gray-800 rounded-lg p-4 smooth-transition">
+          <div class="glassmorphism rounded-lg p-4 smooth-transition animate-scaleIn">
             <h3 class="text-lg font-semibold text-gray-300 mb-4">Profit</h3>
             <canvas id="dashChart"></canvas>
           </div>
@@ -258,8 +320,8 @@
           options: {
             responsive: true,
             scales: {
-              y: { title: { display: true, text: 'Profit ($)', color: '#d1d5db' }, grid: { color: '#4b5563' }, ticks: { color: '#d1d5db' } },
-              x: { title: { display: true, text: 'Trades', color: '#d1d5db' }, grid: { color: '#4b5563' }, ticks: { color: '#d1d5db' } }
+              y: { title: { display: true, text: 'Profit ($)', color: '#d1d5db' }, grid: { color: 'rgba(255, 255, 255, 0.1)' }, ticks: { color: '#d1d5db' } },
+              x: { title: { display: true, text: 'Trades', color: '#d1d5db' }, grid: { color: 'rgba(255, 255, 255, 0.1)' }, ticks: { color: '#d1d5db' } }
             },
             plugins: {
               legend: { labels: { color: '#d1d5db' } },
@@ -268,7 +330,10 @@
                 intersect: false,
                 callbacks: {
                   label: c => c.dataIndex === 0 ? 'Profit: 0.00 $' : `Profit: ${c.parsed.y.toFixed(2)} $`
-                }
+                },
+                backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                titleFont: { family: '-apple-system, BlinkMacSystemFont, sans-serif' },
+                bodyFont: { family: '-apple-system, BlinkMacSystemFont, sans-serif' }
               }
             }
           }
@@ -290,17 +355,17 @@
       });
 
       mainContent.innerHTML = `
-        <div class="bg-gray-800 rounded-lg p-6 smooth-transition">
+        <div class="glassmorphism rounded-lg p-6 smooth-transition animate-fadeInUp">
           <div class="flex justify-between mb-6">
-            <button id="prevMonth" class="text-blue-400 hover:text-blue-300">Previous</button>
+            <button id="prevMonth" class="text-blue-400 hover:text-blue-300 hover-scale smooth-transition">Previous</button>
             <h2 class="text-2xl font-semibold text-white">${new Date(Date.UTC(year, month)).toLocaleString('default', { month: 'long', year: 'numeric' })}</h2>
-            <button id="nextMonth" class="text-blue-400 hover:text-blue-300">Next</button>
+            <button id="nextMonth" class="text-blue-400 hover:text-blue-300 hover-scale smooth-transition">Next</button>
           </div>
           <div class="grid grid-cols-7 gap-2 text-center">
             ${['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => `<div class="font-medium text-gray-400 text-sm">${d}</div>`).join('')}
             ${days.map((x, i) => !x ? `<div key=${i} class="p-3"></div>` : `
               <div
-                class="p-3 rounded-lg ${new Date(x.dt) > new Date(today) ? 'bg-gray-600 cursor-not-allowed' : 'cursor-pointer'} ${getProfit(x.dt) > 0 ? 'bg-green-700' : getProfit(x.dt) < 0 ? 'bg-red-700' : 'bg-gray-700'} hover:bg-gray-600 flex flex-col items-center smooth-transition"
+                class="p-3 rounded-lg ${new Date(x.dt) > new Date(today) ? 'bg-gray-600 cursor-not-allowed' : 'cursor-pointer'} ${getProfit(x.dt) > 0 ? 'bg-green-700' : getProfit(x.dt) < 0 ? 'bg-red-700' : 'glassmorphism'} hover:bg-gray-600 hover-scale flex flex-col items-center smooth-transition animate-scaleIn"
                 onclick="setOvDate('${x.dt}')"
               >
                 <span class="text-white text-base">${x.day}</span>
@@ -323,38 +388,38 @@
 
     function renderTrades() {
       mainContent.innerHTML = `
-        <div class="bg-gray-800 rounded-lg p-6 smooth-transition">
+        <div class="glassmorphism rounded-lg p-6 smooth-transition animate-fadeInUp">
           <h2 class="text-2xl font-semibold text-white mb-6">Trades for ${date}</h2>
-          <input type="date" id="tradeDate" value="${date}" max="${new Date().toISOString().split('T')[0]}" class="p-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 mb-4 w-full smooth-transition">
+          <input type="date" id="tradeDate" value="${date}" max="${new Date().toISOString().split('T')[0]}" class="p-2.5 glassmorphism rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 mb-4 w-full smooth-transition animate-scaleIn">
           <div class="space-y-6">
             <h3 class="text-xl font-semibold text-gray-300 mb-4">Add Trade</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="space-y-4">
-                <select id="market" class="w-full p-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 smooth-transition">
+                <select id="market" class="w-full p-2.5 glassmorphism rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 smooth-transition animate-scaleIn">
                   ${markets.map(x => `<option value="${x}">${x}</option>`).join('')}
                 </select>
-                <input id="riskReward" type="number" step="0.1" placeholder="Risk to Reward *" class="w-full p-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 smooth-transition" required>
-                <input id="profitLossDollar" type="number" step="0.1" placeholder="Profit ($)*" class="w-full p-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 smooth-transition" required>
-                <input id="reason" type="text" placeholder="Reason for Trade" class="w-full p-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 smooth-transition">
-                <div class="p-2.5 bg-gray-700 border border-gray-600 rounded-lg smooth-transition">
+                <input id="riskReward" type="number" step="0.1" placeholder="Risk to Reward *" class="w-full p-2.5 glassmorphism rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 smooth-transition animate-scaleIn" required>
+                <input id="profitLossDollar" type="number" step="0.1" placeholder="Profit ($)*" class="w-full p-2.5 glassmorphism rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 smooth-transition animate-scaleIn" required>
+                <input id="reason" type="text" placeholder="Reason for Trade" class="w-full p-2.5 glassmorphism rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 smooth-transition animate-scaleIn">
+                <div class="p-2.5 glassmorphism rounded-lg smooth-transition animate-scaleIn">
                   <p class="text-gray-200 mb-2 text-base">Trade Image</p>
-                  <input id="tradeImage" type="file" accept="image/*" class="p-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-200 w-full smooth-transition">
-                  <img id="tradeImagePreview" class="hidden mt-2 max-w-[250px] rounded-lg smooth-transition">
+                  <input id="tradeImage" type="file" accept="image/*" class="p-2 glassmorphism rounded-lg text-gray-200 w-full smooth-transition">
+                  <img id="tradeImagePreview" class="hidden mt-2 max-w-[250px] rounded-lg smooth-transition hover-scale">
                 </div>
               </div>
               <div class="space-y-4">
-                <select id="tradeType" class="w-full p-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 smooth-transition">
+                <select id="tradeType" class="w-full p-2.5 glassmorphism rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 smooth-transition animate-scaleIn">
                   <option value="Long">Long</option>
                   <option value="Short">Short</option>
                 </select>
-                <select id="strategy" class="w-full p-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 smooth-transition">
+                <select id="strategy" class="w-full p-2.5 glassmorphism rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 smooth-transition animate-scaleIn">
                   ${strategies.map(x => `<option value="${x}">${x}</option>`).join('')}
                 </select>
-                <input id="tradeDuration" type="number" step="1" placeholder="Duration (min)*" class="w-full p-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 smooth-transition" required>
-                <div class="p-2.5 bg-gray-700 border border-gray-600 rounded-lg smooth-transition">
+                <input id="tradeDuration" type="number" step="1" placeholder="Duration (min)*" class="w-full p-2.5 glassmorphism rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 smooth-transition animate-scaleIn" required>
+                <div class="p-2.5 glassmorphism rounded-lg smooth-transition animate-scaleIn">
                   <p class="text-gray-200 mb-2 text-base">Rating</p>
                   <div id="stars" class="flex space-x-1">
-                    ${[1, 2, 3, 4, 5].map(s => `<button type="button" class="star text-xl text-gray-400 smooth-transition" data-value="${s}">★</button>`).join('')}
+                    ${[1, 2, 3, 4, 5].map(s => `<button type="button" class="star text-xl text-gray-400 hover-scale smooth-transition" data-value="${s}">★</button>`).join('')}
                   </div>
                 </div>
               </div>
@@ -363,11 +428,11 @@
               <p class="text-gray-200 mb-2 text-base">Tags</p>
               <div id="tags" class="flex flex-wrap gap-2"></div>
               <div class="mt-2 flex gap-2">
-                <input id="newTag" type="text" placeholder="New tag" class="p-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 flex-1 smooth-transition">
-                <button id="addTag" class="px-4 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-500 text-sm smooth-transition">Add Tag</button>
+                <input id="newTag" type="text" placeholder="New tag" class="p-2.5 glassmorphism rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 flex-1 smooth-transition animate-scaleIn">
+                <button id="addTag" class="px-4 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-500 hover-scale text-sm smooth-transition">Add Tag</button>
               </div>
             </div>
-            <button id="submitTrade" class="px-4 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-500 text-sm smooth-transition">Add Trade</button>
+            <button id="submitTrade" class="px-4 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-500 hover-scale text-sm smooth-transition">Add Trade</button>
           </div>
           <div id="tradeList" class="mt-6"></div>
         </div>
@@ -439,19 +504,19 @@
       function updateTags() {
         const tagsContainer = document.getElementById('tags');
         tagsContainer.innerHTML = tagsState.map(tag => `
-          <button class="px-3 py-1 rounded-lg text-sm mr-2 smooth-transition ${selectedTags.includes(tag) ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-200'}" onclick="toggleTag('${tag}')">${tag}</button>
+          <button class="px-3 py-1 rounded-lg text-sm mr-2 hover-scale smooth-transition ${selectedTags.includes(tag) ? 'bg-blue-600 text-white' : 'glassmorphism text-gray-200'}" onclick="toggleTag('${tag}')">${tag}</button>
         `).join('');
         document.getElementById('tradeList').innerHTML = (trades[date] || []).map((trade, i) => `
-          <div class="p-3.5 bg-gray-700 rounded-lg mb-1 smooth-transition">
+          <div class="p-3.5 glassmorphism rounded-lg mb-1 hover-scale smooth-transition animate-scaleIn">
             <p class="text-gray-200 text-base"><strong>${(trade.profitLossDollar || 0).toFixed(2)} $</strong> (${trade.market}, R:R ${trade.riskReward || 0})</p>
             <p class="text-sm text-gray-400">Type: ${trade.tradeType || 'Long'}</p>
             <p class="text-sm text-gray-400">Main Reason: ${trade.strategy}</p>
             <p class="text-sm text-gray-400">Tags: ${(trade.tags || []).join(', ')}</p>
             <p class="text-sm text-gray-400">Duration: ${trade.tradeDuration || 0} min, Stars: ${trade.stars || 0}</p>
-            ${trade.image ? `<img src="${trade.image}" alt="Trade screenshot" class="mt-2 max-w-[250px] rounded-lg smooth-transition">` : ''}
+            ${trade.image ? `<img src="${trade.image}" alt="Trade screenshot" class="mt-2 max-w-[250px] rounded-lg hover-scale smooth-transition">` : ''}
             <div class="mt-2 flex space-x-2">
-              <button onclick="editTrade(${i})" class="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-500 text-sm smooth-transition">Edit</button>
-              <button onclick="deleteTrade(${i})" class="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-500 text-sm smooth-transition">Delete</button>
+              <button onclick="editTrade(${i})" class="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-500 hover-scale text-sm smooth-transition">Edit</button>
+              <button onclick="deleteTrade(${i})" class="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-500 hover-scale text-sm smooth-transition">Delete</button>
             </div>
           </div>
         `).join('');
@@ -510,23 +575,23 @@
 
     function renderStrategies() {
       mainContent.innerHTML = `
-        <div class="bg-gray-800 rounded-lg p-6 smooth-transition">
+        <div class="glassmorphism rounded-lg p-6 smooth-transition animate-fadeInUp">
           <h2 class="text-2xl font-semibold text-white mb-6">Strategies</h2>
           <div class="space-y-6">
             <div>
               <h3 class="text-xl font-semibold text-gray-300 mb-4">Add New Strategy</h3>
               <div class="flex gap-2">
-                <input id="newStrategy" type="text" placeholder="New Strategy" class="p-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 flex-1 smooth-transition">
-                <button id="addStrategy" class="px-4 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-500 text-sm smooth-transition">Add</button>
+                <input id="newStrategy" type="text" placeholder="New Strategy" class="p-2.5 glassmorphism rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 flex-1 smooth-transition animate-scaleIn">
+                <button id="addStrategy" class="px-4 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-500 hover-scale text-sm smooth-transition">Add</button>
               </div>
             </div>
             <div>
               <h3 class="text-xl font-semibold text-gray-300 mb-4">Strategy List</h3>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 ${strategies.map(s => `
-                  <div class="flex justify-between items-center p-3.5 bg-gray-700 rounded-lg smooth-transition">
+                  <div class="flex justify-between items-center p-3.5 glassmorphism rounded-lg hover-scale smooth-transition animate-scaleIn">
                     <span class="text-gray-200 text-base">${s}</span>
-                    <button onclick="deleteStrategy('${s}')" class="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-500 text-sm smooth-transition">Delete</button>
+                    <button onclick="deleteStrategy('${s}')" class="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-500 hover-scale text-sm smooth-transition">Delete</button>
                   </div>
                 `).join('')}
               </div>
@@ -552,42 +617,42 @@
       const filteredTrades = getFTrades();
       const { tp, tt, wr, ap, aw, al, mw, ml, md, pf } = calcStats(filteredTrades);
       mainContent.innerHTML = `
-        <div class="bg-gray-800 rounded-lg p-6 smooth-transition">
+        <div class="glassmorphism rounded-lg p-6 smooth-transition animate-fadeInUp">
           <h2 class="text-2xl font-semibold text-white mb-6">All Trades</h2>
           <div class="flex flex-col sm:flex-row sm:space-x-4 mb-6 flex-wrap gap-2 sm:gap-4">
-            <input id="startDate" type="date" value="${allTradesFStart}" class="p-2.5 bg-gray-700 border border-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 w-full sm:w-auto smooth-transition">
-            <input id="endDate" type="date" value="${allTradesFEnd}" class="p-2.5 bg-gray-700 border border-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 w-full sm:w-auto smooth-transition">
-            <select id="marketFilter" class="p-2.5 bg-gray-700 border border-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 w-full sm:w-auto smooth-transition">
+            <input id="startDate" type="date" value="${allTradesFStart}" class="p-2.5 glassmorphism rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 w-full sm:w-auto smooth-transition animate-scaleIn">
+            <input id="endDate" type="date" value="${allTradesFEnd}" class="p-2.5 glassmorphism rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 w-full sm:w-auto smooth-transition animate-scaleIn">
+            <select id="marketFilter" class="p-2.5 glassmorphism rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 w-full sm:w-auto smooth-transition animate-scaleIn">
               <option value="All">All Markets</option>
               ${markets.map(x => `<option value="${x}">${x}</option>`).join('')}
             </select>
-            <select id="periodFilter" class="p-2.5 bg-gray-700 border border-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 w-full sm:w-auto smooth-transition">
+            <select id="periodFilter" class="p-2.5 glassmorphism rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 w-full sm:w-auto smooth-transition animate-scaleIn">
               <option value="All">All Time</option>
               <option value="Week">This Week</option>
               <option value="Month">Last Month</option>
               <option value="Quarter">Last Quarter</option>
             </select>
-            <select id="tagFilter" class="p-2.5 bg-gray-700 border border-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 w-full sm:w-auto smooth-transition">
+            <select id="tagFilter" class="p-2.5 glassmorphism rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 w-full sm:w-auto smooth-transition animate-scaleIn">
               <option value="All">All Tags</option>
               ${tagsState.map(x => `<option value="${x}">${x}</option>`).join('')}
             </select>
-            <select id="ratingFilter" class="p-2.5 bg-gray-700 border border-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 w-full sm:w-auto smooth-transition">
+            <select id="ratingFilter" class="p-2.5 glassmorphism rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 w-full sm:w-auto smooth-transition animate-scaleIn">
               <option value="">All Ratings</option>
               ${[1, 2, 3, 4, 5].map(s => `<option value="${s}">${s} Stars</option>`).join('')}
             </select>
-            <button id="clearFilters" class="p-2.5 bg-gray-600 text-white rounded-lg hover:bg-gray-500 text-sm smooth-transition">Clear Filters</button>
+            <button id="clearFilters" class="p-2.5 bg-gray-600 text-white rounded-lg hover:bg-gray-500 hover-scale text-sm smooth-transition">Clear Filters</button>
           </div>
           <div class="space-y-6">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div class="bg-gray-800 rounded-lg p-3 border border-gray-600 smooth-transition">
+              <div class="glassmorphism rounded-lg p-3 border border-gray-600 hover-scale smooth-transition animate-scaleIn">
                 <p class="text-lg font-semibold text-gray-300">Total Profit/Loss</p>
-                <p class="${tp >= 0 ? 'text-green-500' : 'text-red-500'}">${tp.toFixed(2)} $</p>
+                <p class="${tp >= 0 ? 'text-green-400' : 'text-red-400'}">${tp.toFixed(2)} $</p>
               </div>
-              <div class="bg-gray-800 rounded-lg p-3 border border-gray-600 smooth-transition">
+              <div class="glassmorphism rounded-lg p-3 border border-gray-600 hover-scale smooth-transition animate-scaleIn">
                 <p class="text-lg font-semibold text-gray-300">Win Rate</p>
                 <p class="text-gray-200">${wr.toFixed(2)}%</p>
               </div>
-              <div class="bg-gray-800 rounded-lg p-3 border border-gray-600 smooth-transition">
+              <div class="glassmorphism rounded-lg p-3 border border-gray-600 hover-scale smooth-transition animate-scaleIn">
                 <p class="text-lg font-semibold text-gray-300">Total Trades</p>
                 <p class="text-gray-200">${tt}</p>
               </div>
@@ -612,12 +677,12 @@
         renderAllTrades();
       });
       document.getElementById('tradeList').innerHTML = filteredTrades.map((trade, i) => `
-        <div class="p-3.5 bg-gray-700 rounded-lg mb-1 smooth-transition">
+        <div class="p-3.5 glassmorphism rounded-lg mb-1 hover-scale smooth-transition animate-scaleIn">
           <p class="text-gray-200 text-base"><strong>${(trade.profitLossDollar || 0).toFixed(2)} $</strong> (${trade.market}, R:R ${trade.riskReward || 0})</p>
           <p class="text-sm text-gray-400">Type: ${trade.tradeType || 'Long'}</p>
           <p class="text-sm text-gray-400">Date: ${trade.date}</p>
           <p class="text-sm text-gray-400">Tags: ${(trade.tags || []).join(', ')}</p>
-          <button onclick="deleteTradeAll('${trade.date}', ${i})" class="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-500 mt-2 text-sm smooth-transition">Delete</button>
+          <button onclick="deleteTradeAll('${trade.date}', ${i})" class="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-500 hover-scale text-sm smooth-transition">Delete</button>
         </div>
       `).join('');
     }
@@ -626,28 +691,28 @@
       const dayTrades = trades[ovDate] || [];
       const { tp, tt, wr, ap, aw, al, mw, ml, md, pf, longWR, shortWR } = calcStats(dayTrades);
       mainContent.innerHTML = `
-        <div class="bg-gray-800 rounded-lg p-6 smooth-transition">
+        <div class="glassmorphism rounded-lg p-6 smooth-transition animate-fadeInUp">
           <div class="flex justify-between mb-6">
             <h3 class="text-2xl font-semibold text-white">Day Overview: ${ovDate}</h3>
-            <button onclick="setOvDate(null)" class="px-4 py-1.5 bg-gray-600 text-white rounded-lg hover:bg-gray-500 text-sm smooth-transition">Close</button>
+            <button onclick="setOvDate(null)" class="px-4 py-1.5 bg-gray-600 text-white rounded-lg hover:bg-gray-500 hover-scale text-sm smooth-transition">Close</button>
           </div>
           <div class="space-y-6">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div class="p-3 bg-gray-700 rounded-lg border border-gray-600 smooth-transition">
+              <div class="p-3 glassmorphism rounded-lg border border-gray-600 hover-scale smooth-transition animate-scaleIn">
                 <p class="text-lg font-semibold text-gray-300">Total Profit/Loss</p>
-                <p class="${tp >= 0 ? 'text-green-500' : 'text-red-500'}">${tp.toFixed(2)} $</p>
+                <p class="${tp >= 0 ? 'text-green-400' : 'text-red-400'}">${tp.toFixed(2)} $</p>
               </div>
-              <div class="p-3 bg-gray-700 rounded-lg border border-gray-600 smooth-transition">
+              <div class="p-3 glassmorphism rounded-lg border border-gray-600 hover-scale smooth-transition animate-scaleIn">
                 <p class="text-lg font-semibold text-gray-300">Win Rate</p>
                 <p class="text-gray-200">${wr.toFixed(2)}%</p>
               </div>
-              <div class="p-3 bg-gray-700 rounded-lg border border-gray-600 smooth-transition">
+              <div class="p-3 glassmorphism rounded-lg border border-gray-600 hover-scale smooth-transition animate-scaleIn">
                 <p class="text-lg font-semibold text-gray-300">Total Trades</p>
                 <p class="text-gray-200">${tt}</p>
               </div>
             </div>
             ${dayTrades.length > 0 ? `
-              <div class="bg-gray-800 rounded-lg p-4 smooth-transition">
+              <div class="glassmorphism rounded-lg p-4 smooth-transition animate-scaleIn">
                 <h3 class="text-lg font-semibold text-gray-300 mb-4">Profit (Day)</h3>
                 <canvas id="dayChart-${ovDate}"></canvas>
               </div>
@@ -657,14 +722,14 @@
                 <h3 class="text-xl font-semibold text-gray-300 mb-4">Trade List</h3>
                 <div>
                   ${dayTrades.map((trade, i) => `
-                    <div class="p-3.5 bg-gray-700 rounded-lg mb-1 smooth-transition">
+                    <div class="p-3.5 glassmorphism rounded-lg mb-1 hover-scale smooth-transition animate-scaleIn">
                       <p class="text-gray-200 text-base"><strong>${(trade.profitLossDollar || 0).toFixed(2)} $</strong> (${trade.market}, R:R ${trade.riskReward || 0})</p>
                       <p class="text-sm text-gray-400">Type: ${trade.tradeType || 'Long'}</p>
                       <p class="text-sm text-gray-400">Main Reason: ${trade.strategy}</p>
                       <p class="text-sm text-gray-400">Tags: ${(trade.tags || []).join(', ')}</p>
                       <p class="text-sm text-gray-400">Duration: ${trade.tradeDuration || 0} min, Stars: ${trade.stars || 0}</p>
-                      ${trade.image ? `<img src="${trade.image}" alt="Trade screenshot" class="mt-2 max-w-[250px] rounded-lg cursor-pointer smooth-transition">` : ''}
-                      <button onclick="deleteTradeDay('${ovDate}', ${i})" class="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-500 text-sm smooth-transition">Delete</button>
+                      ${trade.image ? `<img src="${trade.image}" alt="Trade screenshot" class="mt-2 max-w-[250px] rounded-lg cursor-pointer hover-scale smooth-transition">` : ''}
+                      <button onclick="deleteTradeDay('${ovDate}', ${i})" class="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-500 hover-scale text-sm smooth-transition">Delete</button>
                     </div>
                   `).join('')}
                 </div>
@@ -698,8 +763,8 @@
             options: {
               responsive: true,
               scales: {
-                y: { title: { display: true, text: 'Profit ($)', color: '#d1d5db' }, grid: { color: '#4b5563' }, ticks: { color: '#d1d5db' } },
-                x: { title: { display: true, text: 'Trades', color: '#d1d5db' }, grid: { color: '#4b5563' }, ticks: { color: '#d1d5db' } }
+                y: { title: { display: true, text: 'Profit ($)', color: '#d1d5db' }, grid: { color: 'rgba(255, 255, 255, 0.1)' }, ticks: { color: '#d1d5db' } },
+                x: { title: { display: true, text: 'Trades', color: '#d1d5db' }, grid: { color: 'rgba(255, 255, 255, 0.1)' }, ticks: { color: '#d1d5db' } }
               },
               plugins: {
                 legend: { labels: { color: '#d1d5db' } },
@@ -708,7 +773,10 @@
                   intersect: false,
                   callbacks: {
                     label: c => c.dataIndex === 0 ? 'Profit: 0.00 $' : `Profit: ${c.parsed.y.toFixed(2)} $`
-                  }
+                  },
+                  backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                  titleFont: { family: '-apple-system, BlinkMacSystemFont, sans-serif' },
+                  bodyFont: { family: '-apple-system, BlinkMacSystemFont, sans-serif' }
                 }
               }
             }
@@ -785,6 +853,7 @@
       view = 'dashboard';
       ovDate = null;
       showProfileManager = false;
+      profileManager.classList.add('hidden');
       renderView();
       updateButtonStyles();
     });
