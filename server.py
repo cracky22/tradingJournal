@@ -196,6 +196,27 @@ def get_data(profile_name):
         logger.error(f"Error processing GET request for profile {profile_name}: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/get_profiles', methods=['GET'])
+def get_profiles():
+    client_ip = request.remote_addr
+    if not check_rate_limit(client_ip):
+        logger.warning(f"Rate limit exceeded for IP: {client_ip}")
+        return jsonify({'error': 'Rate limit exceeded'}), 429
+    
+    try:
+        logger.info(f"Received GET request for all profiles from {client_ip}")
+        data = load_data()
+        profiles = list(data['profiles'].keys())
+        if not profiles:
+            profiles = ['Profile 1']  # Ensure at least one profile exists
+        response = {'profiles': profiles}
+        response_size = len(json.dumps(response).encode('utf-8'))
+        logger.info(f"Sending response for /api/get_profiles, size: {format_file_size(response_size)}")
+        return jsonify(response), 200
+    except Exception as e:
+        logger.error(f"Error processing GET request for profiles: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/docs', methods=['GET'])
 def api_docs():
     try:
@@ -235,6 +256,18 @@ def api_docs():
                         'strategies': 'array',
                         'profilesList': 'array',
                         'currentProfile': 'string'
+                    },
+                    'errors': {
+                        '429': 'Rate limit exceeded',
+                        '500': 'Server error'
+                    }
+                },
+                {
+                    'path': '/api/get_profiles',
+                    'method': 'GET',
+                    'description': 'Retrieves a list of all profile names',
+                    'response': {
+                        'profiles': 'array of strings'
                     },
                     'errors': {
                         '429': 'Rate limit exceeded',
