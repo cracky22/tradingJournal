@@ -64,3 +64,9 @@
 2025-05-31 15:06:25,840 [INFO] Sending response for /api/submit_data, size: 38.0 B
 2025-05-31 15:24:43,150 [INFO] Received shutdown signal, stopping server...
 2025-05-31 15:24:48,178 [INFO] Server stopped gracefully
+2025-05-31 15:24:55,059 [INFO] Starting server with 10 threads
+2025-05-31 15:24:55,060 [INFO] Opening browser at http://localhost:2108
+2025-05-31 15:24:55,333 [INFO] Serving index.html, size: 49.5 KB
+2025-05-31 15:24:55,706 [INFO] Received GET request for profile: Profile 1 from ::1
+2025-05-31 15:24:55,711 [INFO] Loaded data from trading_journal_data.json, size: 207.0 B
+2025-05-31 15:24:55,712 [INFO] Sending response for /api/get_data/Profile 1, size: 106.0 B
