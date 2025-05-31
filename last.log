@@ -1,3 +1,96 @@
-2025-05-31 23:19:26,885 [INFO] Starting server with 10 threads
-2025-05-31 23:19:26,886 [INFO] Opening browser at http://localhost:2108
-2025-05-31 23:19:27,045 [INFO] Serving index.html, size: 56.1 KB
+2025-05-31 23:20:35,355 [INFO] Starting server with 10 threads
+2025-05-31 23:20:35,356 [INFO] Opening browser at http://localhost:2108
+2025-05-31 23:20:35,553 [INFO] Serving index.html, size: 56.1 KB
+2025-05-31 23:20:36,140 [INFO] Received GET request for profile: Profile 1 from ::1
+2025-05-31 23:20:36,161 [INFO] Loaded data from trading_journal_data.json, size: 1.9 KB
+2025-05-31 23:20:36,166 [INFO] Sending response for /api/get_data/Profile 1, size: 1000.0 B
+2025-05-31 23:21:58,354 [INFO] Received POST request to /api/submit_data from ::1, size: 891.0 B
+2025-05-31 23:21:58,361 [INFO] Loaded data from trading_journal_data.json, size: 1.9 KB
+2025-05-31 23:21:58,367 [INFO] Created backup: trading_journal_data.json.backup
+2025-05-31 23:21:58,406 [INFO] Saved data to trading_journal_data.json, size: 1.9 KB
+2025-05-31 23:21:58,406 [INFO] Removed backup: trading_journal_data.json.backup
+2025-05-31 23:21:58,406 [INFO] Sending response for /api/submit_data, size: 38.0 B
+2025-05-31 23:22:04,355 [INFO] Received GET request for profile: Profile 1 from ::1
+2025-05-31 23:22:04,372 [INFO] Loaded data from trading_journal_data.json, size: 1.9 KB
+2025-05-31 23:22:04,372 [INFO] Sending response for /api/get_data/Profile 1, size: 1000.0 B
+2025-05-31 23:22:09,870 [INFO] Received POST request to /api/submit_data from ::1, size: 891.0 B
+2025-05-31 23:22:09,873 [INFO] Loaded data from trading_journal_data.json, size: 1.9 KB
+2025-05-31 23:22:09,877 [INFO] Created backup: trading_journal_data.json.backup
+2025-05-31 23:22:09,888 [INFO] Saved data to trading_journal_data.json, size: 1.9 KB
+2025-05-31 23:22:09,919 [INFO] Removed backup: trading_journal_data.json.backup
+2025-05-31 23:22:09,924 [INFO] Sending response for /api/submit_data, size: 38.0 B
+2025-05-31 23:22:41,969 [INFO] Received POST request to /api/submit_data from ::1, size: 608.0 B
+2025-05-31 23:22:41,980 [INFO] Loaded data from trading_journal_data.json, size: 1.9 KB
+2025-05-31 23:22:41,987 [INFO] Created backup: trading_journal_data.json.backup
+2025-05-31 23:22:42,001 [INFO] Saved data to trading_journal_data.json, size: 3.1 KB
+2025-05-31 23:22:42,043 [INFO] Removed backup: trading_journal_data.json.backup
+2025-05-31 23:22:42,044 [INFO] Sending response for /api/submit_data, size: 38.0 B
+2025-05-31 23:23:29,888 [INFO] Received GET request for profile: Profile 2 from ::1
+2025-05-31 23:23:29,904 [INFO] Loaded data from trading_journal_data.json, size: 3.1 KB
+2025-05-31 23:23:29,905 [INFO] Sending response for /api/get_data/Profile 2, size: 675.0 B
+2025-05-31 23:25:42,132 [INFO] Received GET request for profile: Profile 1 from ::1
+2025-05-31 23:25:42,133 [INFO] Loaded data from trading_journal_data.json, size: 3.1 KB
+2025-05-31 23:25:42,134 [INFO] Sending response for /api/get_data/Profile 1, size: 1000.0 B
+2025-05-31 23:25:59,267 [INFO] Received GET request for profile: Profile 1 from ::1
+2025-05-31 23:25:59,272 [INFO] Loaded data from trading_journal_data.json, size: 3.1 KB
+2025-05-31 23:25:59,274 [INFO] Sending response for /api/get_data/Profile 1, size: 1000.0 B
+2025-05-31 23:26:33,188 [INFO] Received POST request to /api/submit_data from ::1, size: 891.0 B
+2025-05-31 23:26:33,196 [INFO] Loaded data from trading_journal_data.json, size: 3.1 KB
+2025-05-31 23:26:33,199 [INFO] Created backup: trading_journal_data.json.backup
+2025-05-31 23:26:33,204 [INFO] Saved data to trading_journal_data.json, size: 3.1 KB
+2025-05-31 23:26:33,234 [INFO] Removed backup: trading_journal_data.json.backup
+2025-05-31 23:26:33,240 [INFO] Sending response for /api/submit_data, size: 38.0 B
+2025-05-31 23:26:44,997 [INFO] Received POST request to /api/submit_data from ::1, size: 887.0 B
+2025-05-31 23:26:45,034 [INFO] Loaded data from trading_journal_data.json, size: 3.1 KB
+2025-05-31 23:26:45,042 [INFO] Created backup: trading_journal_data.json.backup
+2025-05-31 23:26:45,043 [INFO] Saved data to trading_journal_data.json, size: 5.0 KB
+2025-05-31 23:26:45,043 [INFO] Removed backup: trading_journal_data.json.backup
+2025-05-31 23:26:45,045 [INFO] Sending response for /api/submit_data, size: 38.0 B
+2025-05-31 23:26:54,199 [INFO] Received POST request to /api/submit_data from ::1, size: 891.0 B
+2025-05-31 23:26:54,250 [INFO] Loaded data from trading_journal_data.json, size: 5.0 KB
+2025-05-31 23:26:54,254 [INFO] Created backup: trading_journal_data.json.backup
+2025-05-31 23:26:54,261 [INFO] Saved data to trading_journal_data.json, size: 5.0 KB
+2025-05-31 23:26:54,261 [INFO] Removed backup: trading_journal_data.json.backup
+2025-05-31 23:26:54,262 [INFO] Sending response for /api/submit_data, size: 38.0 B
+2025-05-31 23:28:53,292 [INFO] Received GET request for profile: Profile 1 from ::1
+2025-05-31 23:28:53,308 [INFO] Loaded data from trading_journal_data.json, size: 5.0 KB
+2025-05-31 23:28:53,309 [INFO] Sending response for /api/get_data/Profile 1, size: 1000.0 B
+2025-05-31 23:29:19,893 [INFO] Received GET request for profile: Profile 1 from ::1
+2025-05-31 23:29:19,896 [INFO] Loaded data from trading_journal_data.json, size: 5.0 KB
+2025-05-31 23:29:19,897 [INFO] Sending response for /api/get_data/Profile 1, size: 1000.0 B
+2025-05-31 23:29:40,970 [INFO] Received POST request to /api/submit_data from ::1, size: 891.0 B
+2025-05-31 23:29:40,985 [INFO] Loaded data from trading_journal_data.json, size: 5.0 KB
+2025-05-31 23:29:40,988 [INFO] Created backup: trading_journal_data.json.backup
+2025-05-31 23:29:41,019 [INFO] Saved data to trading_journal_data.json, size: 5.0 KB
+2025-05-31 23:29:41,020 [INFO] Removed backup: trading_journal_data.json.backup
+2025-05-31 23:29:41,021 [INFO] Sending response for /api/submit_data, size: 38.0 B
+2025-05-31 23:29:48,275 [INFO] Received POST request to /api/submit_data from ::1, size: 162.0 B
+2025-05-31 23:29:48,281 [INFO] Loaded data from trading_journal_data.json, size: 5.0 KB
+2025-05-31 23:29:48,284 [INFO] Created backup: trading_journal_data.json.backup
+2025-05-31 23:29:48,298 [INFO] Saved data to trading_journal_data.json, size: 4.1 KB
+2025-05-31 23:29:48,325 [INFO] Removed backup: trading_journal_data.json.backup
+2025-05-31 23:29:48,325 [INFO] Sending response for /api/submit_data, size: 38.0 B
+2025-05-31 23:29:54,226 [INFO] Received GET request for profile: Profile 1 from ::1
+2025-05-31 23:29:54,248 [INFO] Loaded data from trading_journal_data.json, size: 4.1 KB
+2025-05-31 23:29:54,249 [INFO] Sending response for /api/get_data/Profile 1, size: 1000.0 B
+2025-05-31 23:29:55,591 [INFO] Received GET request for profile: Profile 1 from ::1
+2025-05-31 23:29:55,593 [INFO] Loaded data from trading_journal_data.json, size: 4.1 KB
+2025-05-31 23:29:55,595 [INFO] Sending response for /api/get_data/Profile 1, size: 1000.0 B
+2025-05-31 23:29:59,495 [INFO] Received GET request for profile: Profile 1 from ::1
+2025-05-31 23:29:59,496 [INFO] Loaded data from trading_journal_data.json, size: 4.1 KB
+2025-05-31 23:29:59,498 [INFO] Sending response for /api/get_data/Profile 1, size: 1000.0 B
+2025-05-31 23:30:20,208 [INFO] Received GET request for profile: Profile 1 from ::1
+2025-05-31 23:30:20,210 [INFO] Loaded data from trading_journal_data.json, size: 4.1 KB
+2025-05-31 23:30:20,217 [INFO] Sending response for /api/get_data/Profile 1, size: 1000.0 B
+2025-05-31 23:30:25,439 [INFO] Received POST request to /api/submit_data from ::1, size: 891.0 B
+2025-05-31 23:30:25,450 [INFO] Loaded data from trading_journal_data.json, size: 4.1 KB
+2025-05-31 23:30:25,487 [INFO] Created backup: trading_journal_data.json.backup
+2025-05-31 23:30:25,492 [INFO] Saved data to trading_journal_data.json, size: 4.1 KB
+2025-05-31 23:30:25,493 [INFO] Removed backup: trading_journal_data.json.backup
+2025-05-31 23:30:25,493 [INFO] Sending response for /api/submit_data, size: 38.0 B
+2025-05-31 23:30:28,693 [INFO] Received GET request for profile: Profile 2 from ::1
+2025-05-31 23:30:28,756 [INFO] Loaded data from trading_journal_data.json, size: 4.1 KB
+2025-05-31 23:30:28,757 [INFO] Sending response for /api/get_data/Profile 2, size: 181.0 B
+2025-05-31 23:32:14,205 [INFO] Received GET request for profile: Profile 1 from ::1
+2025-05-31 23:32:14,209 [INFO] Loaded data from trading_journal_data.json, size: 4.1 KB
+2025-05-31 23:32:14,220 [INFO] Sending response for /api/get_data/Profile 1, size: 1000.0 B

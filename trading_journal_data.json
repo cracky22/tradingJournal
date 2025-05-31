@@ -5,67 +5,67 @@
         "2025-05-31": [
           {
             "date": "2025-05-31",
+            "image": null,
             "market": "NASDAQ",
-            "tradeType": "Long",
-            "riskReward": 123,
-            "strategy": "",
-            "strategies": [
-              ""
-            ],
             "profitLossDollar": 123,
+            "reason": "",
+            "riskReward": 123,
+            "stars": 0,
+            "strategies": [
+              ""
+            ],
+            "strategy": "",
+            "tags": [],
             "tradeDuration": 123,
-            "reason": "",
-            "stars": 0,
-            "image": null,
-            "tags": []
+            "tradeType": "Long"
           },
           {
             "date": "2025-05-31",
+            "image": null,
             "market": "NASDAQ",
-            "tradeType": "Long",
-            "riskReward": 234,
-            "strategy": "",
-            "strategies": [
-              ""
-            ],
             "profitLossDollar": 234,
+            "reason": "",
+            "riskReward": 234,
+            "stars": 0,
+            "strategies": [
+              ""
+            ],
+            "strategy": "",
+            "tags": [],
             "tradeDuration": 234,
-            "reason": "",
-            "stars": 0,
-            "image": null,
-            "tags": []
+            "tradeType": "Long"
           },
           {
             "date": "2025-05-31",
+            "image": null,
             "market": "NASDAQ",
-            "tradeType": "Long",
-            "riskReward": 345,
-            "strategy": "",
-            "strategies": [
-              ""
-            ],
             "profitLossDollar": 345,
-            "tradeDuration": 345,
             "reason": "",
+            "riskReward": 345,
             "stars": 0,
-            "image": null,
-            "tags": []
-          },
-          {
-            "date": "2025-05-31",
-            "market": "NASDAQ",
-            "tradeType": "Long",
-            "riskReward": 456,
-            "strategy": "",
             "strategies": [
               ""
             ],
-            "profitLossDollar": 456,
-            "tradeDuration": 456,
-            "reason": "",
-            "stars": 0,
+            "strategy": "",
+            "tags": [],
+            "tradeDuration": 345,
+            "tradeType": "Long"
+          },
+          {
+            "date": "2025-05-31",
             "image": null,
-            "tags": []
+            "market": "NASDAQ",
+            "profitLossDollar": 456,
+            "reason": "",
+            "riskReward": 456,
+            "stars": 0,
+            "strategies": [
+              ""
+            ],
+            "strategy": "",
+            "tags": [],
+            "tradeDuration": 456,
+            "tradeType": "Long"
           }
         ]
       },
@@ -73,6 +73,97 @@
       "strategies": [],
       "profilesList": [
         "Profile 1"
+      ]
+    },
+    "Profile 2": {
+      "trades": {},
+      "tags": [],
+      "strategies": [
+        "Trendfolge",
+        "Volumen",
+        "Fibonacci",
+        "Sweep",
+        "Range",
+        "RAIN"
+      ],
+      "profilesList": [
+        "Profile 1",
+        "Profile 2"
+      ]
+    },
+    "Profile": {
+      "trades": {
+        "2025-05-31": [
+          {
+            "date": "2025-05-31",
+            "image": null,
+            "market": "NASDAQ",
+            "profitLossDollar": 123,
+            "reason": "",
+            "riskReward": 123,
+            "stars": 0,
+            "strategies": [
+              ""
+            ],
+            "strategy": "",
+            "tags": [],
+            "tradeDuration": 123,
+            "tradeType": "Long"
+          },
+          {
+            "date": "2025-05-31",
+            "image": null,
+            "market": "NASDAQ",
+            "profitLossDollar": 234,
+            "reason": "",
+            "riskReward": 234,
+            "stars": 0,
+            "strategies": [
+              ""
+            ],
+            "strategy": "",
+            "tags": [],
+            "tradeDuration": 234,
+            "tradeType": "Long"
+          },
+          {
+            "date": "2025-05-31",
+            "image": null,
+            "market": "NASDAQ",
+            "profitLossDollar": 345,
+            "reason": "",
+            "riskReward": 345,
+            "stars": 0,
+            "strategies": [
+              ""
+            ],
+            "strategy": "",
+            "tags": [],
+            "tradeDuration": 345,
+            "tradeType": "Long"
+          },
+          {
+            "date": "2025-05-31",
+            "image": null,
+            "market": "NASDAQ",
+            "profitLossDollar": 456,
+            "reason": "",
+            "riskReward": 456,
+            "stars": 0,
+            "strategies": [
+              ""
+            ],
+            "strategy": "",
+            "tags": [],
+            "tradeDuration": 456,
+            "tradeType": "Long"
+          }
+        ]
+      },
+      "tags": [],
+      "strategies": [],
+      "profilesList": [
+        "Profile"
       ]
     }
   },
