@@ -1,7 +1,74 @@
 {
   "profiles": {
     "Profile 1": {
-      "trades": {},
+      "trades": {
+        "2025-05-31": [
+          {
+            "date": "2025-05-31",
+            "market": "NASDAQ",
+            "tradeType": "Long",
+            "riskReward": 123,
+            "strategy": "",
+            "strategies": [
+              ""
+            ],
+            "profitLossDollar": 123,
+            "tradeDuration": 123,
+            "reason": "",
+            "stars": 0,
+            "image": null,
+            "tags": []
+          },
+          {
+            "date": "2025-05-31",
+            "market": "NASDAQ",
+            "tradeType": "Long",
+            "riskReward": 234,
+            "strategy": "",
+            "strategies": [
+              ""
+            ],
+            "profitLossDollar": 234,
+            "tradeDuration": 234,
+            "reason": "",
+            "stars": 0,
+            "image": null,
+            "tags": []
+          },
+          {
+            "date": "2025-05-31",
+            "market": "NASDAQ",
+            "tradeType": "Long",
+            "riskReward": 345,
+            "strategy": "",
+            "strategies": [
+              ""
+            ],
+            "profitLossDollar": 345,
+            "tradeDuration": 345,
+            "reason": "",
+            "stars": 0,
+            "image": null,
+            "tags": []
+          },
+          {
+            "date": "2025-05-31",
+            "market": "NASDAQ",
+            "tradeType": "Long",
+            "riskReward": 456,
+            "strategy": "",
+            "strategies": [
+              ""
+            ],
+            "profitLossDollar": 456,
+            "tradeDuration": 456,
+            "reason": "",
+            "stars": 0,
+            "image": null,
+            "tags": []
+          }
+        ]
+      },
       "tags": [],
       "strategies": [],
       "profilesList": [
