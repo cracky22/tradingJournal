@@ -36,20 +36,19 @@ function App() {
     if (storedData) {
       try {
         const parsed = JSON.parse(storedData);
-        setProfiles(parsed.profiles || ["Profile 1"]);
-        setCurrentProfile(parsed.currentProfile || "Profile 1");
+        const validProfiles = parsed.profiles && Array.isArray(parsed.profiles) ? parsed.profiles : ["Profile 1"];
+        setProfiles(validProfiles);
+        setCurrentProfile(parsed.currentProfile || validProfiles[0] || "Profile 1");
         setTrades(parsed.trades || {});
         setTags(parsed.tags || []);
-        setStrategies(
-          parsed.strategies || [
-            "Trendfolge",
-            "Volumen",
-            "Fibonacci",
-            "Sweep",
-            "Range",
-            "RAIN",
-          ]
-        );
+        setStrategies(parsed.strategies || [
+          "Trendfolge",
+          "Volumen",
+          "Fibonacci",
+          "Sweep",
+          "Range",
+          "RAIN",
+        ]);
         return true;
       } catch (e) {
         console.error("Error parsing sessionStorage data:", e);
@@ -87,13 +86,10 @@ function App() {
       });
       if (!profilesResponse.ok) {
         const data = await profilesResponse.json().catch(() => {});
-        throw new Error(
-          data.error || `HTTP error! Status: ${profilesResponse.status}`
-        );
+        throw new Error(data.error || `HTTP error! Status: ${profilesResponse.status}`);
       }
       const { profiles: profilesList } = await profilesResponse.json();
-      const profilesData =
-        profilesList.length > 0 ? profilesList : ["Profile 1"];
+      const profilesData = profilesList.length > 0 ? profilesList : ["Profile 1"];
 
       setProfiles(profilesData);
       setCurrentProfile(profilesData[0] || "Profile 1");
@@ -114,16 +110,12 @@ function App() {
         );
         if (!response.ok) {
           const data = await response.json().catch(() => {});
-          throw new Error(
-            data.error || `HTTP error! Status: ${response.status}`
-          );
+          throw new Error(data.error || `HTTP error! Status: ${response.status}`);
         }
         const data = await response.json();
         allData.trades[profile] = data.trades || {};
         allData.tags = [...new Set([...allData.tags, ...(data.tags || [])])];
-        allData.strategies = [
-          ...new Set([...allData.strategies, ...(data.strategies || [])]),
-        ];
+        allData.strategies = [...new Set([...allData.strategies, ...(data.strategies || [])])];
       }
 
       saveToSessionStorage(allData);
@@ -132,9 +124,9 @@ function App() {
       setStrategies(allData.strategies);
     } catch (error) {
       console.error("Error fetching all data:", error);
-      alert(`Failed to fetch data: ${error.message || "Network error"}`);
-      setProfiles(["Profile 1"]);
-      setCurrentProfile("Profile 1");
+      const fallbackProfiles = ["Profile 1"];
+      setProfiles(fallbackProfiles);
+      setCurrentProfile(fallbackProfiles[0]);
       setTrades({ "Profile 1": {} });
       setTags([]);
       setStrategies([
@@ -147,6 +139,23 @@ function App() {
       ]);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Load profiles function for ProfilesView
+  const loadProfiles = async () => {
+    try {
+      const response = await fetch("/api/get_profiles", {
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      const { profiles: profilesList } = await response.json();
+      return profilesList.length > 0 ? profilesList : ["Profile 1"];
+    } catch (error) {
+      console.error("Error loading profiles:", error);
+      return ["Profile 1"];
     }
   };
 
@@ -174,9 +183,7 @@ function App() {
       const parallaxBg = document.querySelector(".parallax-bg");
       const scrollPosition = window.pageYOffset;
       if (parallaxBg) {
-        parallaxBg.style.transform = `translate3d(0, ${
-          scrollPosition * 0.5
-        }px, 0)`;
+        parallaxBg.style.transform = `translate3d(0, ${scrollPosition * 0.5}px, 0)`;
       }
     }, 16);
 
