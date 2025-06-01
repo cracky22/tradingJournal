@@ -31,34 +31,19 @@ function TradesView({
   // Load trades for the selected date directly from props
   const dayTrades = t[d] || [];
 
-  // Fetch images for trades only if they haven't been loaded yet
+  // Preload images from trade data
   useEffect(() => {
-    const loadImages = async () => {
-      const newImages = {};
-      let hasNewImages = false;
-      for (let i = 0; i < dayTrades.length; i++) {
-        const trade = dayTrades[i];
-        if (trade.image) {
-          const key = `${d}-${i}`;
-          if (!(key in images)) {
-            try {
-              const response = await fi(cp, d, i);
-              newImages[key] = `data:image/png;base64,${response.image}`;
-              hasNewImages = true;
-            } catch (error) {
-              console.error(`Error fetching image for ${key}:`, error);
-              newImages[key] = null;
-              hasNewImages = true;
-            }
-          }
-        }
+    const newImages = {};
+    dayTrades.forEach((trade, i) => {
+      const key = `${d}-${i}`;
+      if (trade.image && !(key in images)) {
+        newImages[key] = `data:image/png;base64,${trade.image}`;
       }
-      if (hasNewImages) {
-        setImages((prev) => ({ ...prev, ...newImages }));
-      }
-    };
-    loadImages();
-  }, [dayTrades, cp, fi, d]);
+    });
+    if (Object.keys(newImages).length > 0) {
+      setImages((prev) => ({ ...prev, ...newImages }));
+    }
+  }, [dayTrades, d]);
 
   // Populate form for editing
   useEffect(() => {
@@ -402,8 +387,7 @@ function TradesView({
             <tbody>
               {dayTrades.map((trade, index) => {
                 const imageKey = `${d}-${index}`;
-                const hasImage = trade.image && imageKey in images;
-                const imageFailed = hasImage && images[imageKey] === null;
+                const imageSrc = trade.image ? `data:image/png;base64,${trade.image}` : null;
                 return (
                   <tr
                     key={imageKey}
@@ -426,24 +410,17 @@ function TradesView({
                     <td className="p-3">
                       {!trade.image ? (
                         "No Image"
-                      ) : hasImage ? (
-                        imageFailed ? (
-                          "Image Not Found"
-                        ) : (
-                          <img
-                            src={images[imageKey]}
-                            alt="Trade screenshot"
-                            className="w-16 h-16 object-cover rounded"
-                            onError={() => {
-                              setImages((prev) => ({
-                                ...prev,
-                                [imageKey]: null,
-                              }));
-                            }}
-                          />
-                        )
+                      ) : imageSrc ? (
+                        <img
+                          src={imageSrc}
+                          alt="Trade screenshot"
+                          className="w-16 h-16 object-cover rounded"
+                          onError={() => {
+                            console.error(`Failed to load image for ${imageKey}`);
+                          }}
+                        />
                       ) : (
-                        <span className="text-gray-400">Loading...</span>
+                        "Image Not Found"
                       )}
                     </td>
                     <td className="p-3 flex gap-2">

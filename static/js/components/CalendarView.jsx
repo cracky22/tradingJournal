@@ -135,6 +135,14 @@ function CalendarView({
                 <div>
                   <p className="text-white">{trade.market || 'N/A'} - ${trade.profitLossDollar?.toFixed(2) || '0.00'}</p>
                   <p className="text-gray-400 text-sm">{trade.strategy || 'N/A'}</p>
+                  {trade.image && (
+                    <img
+                      src={`data:image/png;base64,${trade.image}`}
+                      alt="Trade screenshot"
+                      className="w-16 h-16 object-cover rounded mt-2"
+                      onError={() => console.error(`Failed to load image for trade ${index} on ${d}`)}
+                    />
+                  )}
                 </div>
                 <div className="flex space-x-2">
                   {/* Placeholder for future delete functionality if needed */}
