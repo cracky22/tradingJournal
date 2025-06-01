@@ -24,13 +24,18 @@ function DayOverviewTrades({ trades, date, dt, fi, cp }) {
       <h3 className="text-lg font-semibold text-gray-300 mb-2">Trades on {date}</h3>
       <div className="space-y-2">
         {trades.map((trade, index) => {
+          // Überprüfe, ob trade.image existiert und ein String ist
           const hasValidImage =
             trade.image &&
+            typeof trade.image === 'string' &&
             (trade.image.startsWith('data:image') || /^[A-Za-z0-9+/=]+$/.test(trade.image));
-          const imageSrc =
-            trade.image && !trade.image.startsWith('data:image')
-              ? `data:image/png;base64,${trade.image}`
-              : trade.image;
+          
+          // Wenn kein Bild vorhanden ist, zeige "No Image"
+          const imageSrc = hasValidImage
+            ? trade.image.startsWith('data:image')
+              ? trade.image
+              : `data:image/png;base64,${trade.image}`
+            : null;
 
           return (
             <div
@@ -43,12 +48,13 @@ function DayOverviewTrades({ trades, date, dt, fi, cp }) {
                 </p>
                 <p className="text-gray-400 text-sm">{trade.strategy || 'N/A'}</p>
 
-                {hasValidImage ? (
+                {hasValidImage && imageSrc ? (
                   <img
                     src={imageSrc}
                     alt="Trade screenshot"
                     className="w-16 h-16 object-cover rounded mt-2 cursor-pointer"
                     onClick={() => openImageViewer(imageSrc)}
+                    onError={() => console.log(`Failed to load image for trade ${index}: ${imageSrc}`)}
                   />
                 ) : (
                   <div className="w-16 h-16 bg-gray-600 flex items-center justify-center rounded mt-2 text-white text-xs">
