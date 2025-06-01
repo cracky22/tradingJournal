@@ -1,90 +1,96 @@
-const { useState, useEffect } = React;
+const { useState } = React;
 
-function DayOverview({ t, d, sd, gp, gc, dt, fi, cp }) {
-  const [chartInstance, setChartInstance] = useState(null);
-  const date = d; // d ist jetzt nur das Datum (String)
-  const trades = t[date] || []; // Trades direkt aus t holen
+function DayOverviewTrades({ trades, date, dt, fi, cp }) {
+  const [selectedImage, setSelectedImage] = useState(null);
 
-  useEffect(() => {
-    if (!date || !trades.length) return;
+  const openImageViewer = (imageSrc) => {
+    setSelectedImage(imageSrc);
+  };
 
-    // Calculate cumulative profit
-    const dates = [];
-    const profits = [];
-    let cumulativeProfit = 0;
-
-    trades.forEach(trade => {
-      const tradeDate = trade.date || date;
-      const dailyProfit = trade.profitLossDollar || 0;
-      cumulativeProfit += dailyProfit;
-      dates.push(tradeDate);
-      profits.push(cumulativeProfit);
-    });
-
-    const ctx = document.getElementById('cumulativeProfitChart')?.getContext('2d');
-    if (!ctx) return;
-
-    // Destroy previous chart instance if it exists
-    if (chartInstance) {
-      chartInstance.destroy();
+  const closeImageViewer = (e) => {
+    if (e.target === e.currentTarget || e.target.className.includes('close')) {
+      setSelectedImage(null);
     }
+  };
 
-    const newChartInstance = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: dates,
-        datasets: [{
-          label: 'Cumulative Profit ($)',
-          data: profits,
-          borderColor: '#3b82f6',
-          backgroundColor: 'rgba(59, 130, 246, 0.2)',
-          fill: true,
-          tension: 0.1,
-        }],
-      },
-      options: {
-        responsive: true,
-        scales: {
-          x: { title: { display: true, text: 'Date', color: '#d1d5db' }, ticks: { color: '#d1d5db' } },
-          y: { title: { display: true, text: 'Profit ($)', color: '#d1d5db' }, ticks: { color: '#d1d5db' } },
-        },
-        plugins: {
-          legend: { labels: { color: '#d1d5db' } },
-        },
-      },
-    });
-
-    setChartInstance(newChartInstance);
-
-    return () => {
-      if (newChartInstance) {
-        newChartInstance.destroy();
-      }
-    };
-  }, [date, trades]);
-
-  const totalProfit = gp(date) || 0;
+  const handleDelete = (index) => {
+    if (window.confirm(`Are you sure you want to delete this trade?`)) {
+      dt(date, index);
+    }
+  };
 
   return (
-    <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-      <button
-        onClick={() => sd(null)}
-        className="mb-4 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600"
-      >
-        Back
-      </button>
-      <h2 className="text-2xl font-bold text-white mb-4">Day Overview: {date}</h2>
-      <div className="mb-6">
-        <p className="text-lg font-semibold text-green-400 mb-2">Total Profit: ${totalProfit.toFixed(2)}</p>
-        <canvas id="cumulativeProfitChart" className="w-full h-64"></canvas>
+    <div className="mt-6">
+      <h3 className="text-lg font-semibold text-gray-300 mb-2">Trades on {date}</h3>
+      <div className="space-y-2">
+        {trades.map((trade, index) => {
+          const hasValidImage =
+            trade.image &&
+            (trade.image.startsWith('data:image') || /^[A-Za-z0-9+/=]+$/.test(trade.image));
+          const imageSrc =
+            trade.image && !trade.image.startsWith('data:image')
+              ? `data:image/png;base64,${trade.image}`
+              : trade.image;
+
+          return (
+            <div
+              key={index}
+              className="bg-gray-700 p-3 rounded-lg shadow flex justify-between items-center"
+            >
+              <div>
+                <p className="text-white">
+                  {trade.market || 'N/A'} - ${trade.profitLossDollar?.toFixed(2) || '0.00'}
+                </p>
+                <p className="text-gray-400 text-sm">{trade.strategy || 'N/A'}</p>
+
+                {hasValidImage ? (
+                  <img
+                    src={imageSrc}
+                    alt="Trade screenshot"
+                    className="w-16 h-16 object-cover rounded mt-2 cursor-pointer"
+                    onClick={() => openImageViewer(imageSrc)}
+                  />
+                ) : (
+                  <div className="w-16 h-16 bg-gray-600 flex items-center justify-center rounded mt-2 text-white text-xs">
+                    No Image
+                  </div>
+                )}
+              </div>
+              <button
+                className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 smooth-transition"
+                onClick={() => handleDelete(index)}
+              >
+                Delete
+              </button>
+            </div>
+          );
+        })}
       </div>
-      <DayOverviewTrades
-        trades={trades}
-        date={date}
-        dt={dt}
-        fi={fi}
-        cp={cp}
-      />
+      {trades.length === 0 && (
+        <p className="mt-2 text-gray-400">No trades for {date}.</p>
+      )}
+
+      {/* Image Viewer */}
+      {selectedImage && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
+          onClick={closeImageViewer}
+        >
+          <div className="relative">
+            <img
+              src={selectedImage}
+              alt="Full-size trade screenshot"
+              className="max-h-[90vh] max-w-[90vw] object-contain"
+            />
+            <button
+              className="absolute top-2 right-2 text-white text-2xl close"
+              onClick={closeImageViewer}
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
