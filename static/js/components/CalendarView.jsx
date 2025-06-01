@@ -126,48 +126,78 @@ function CalendarView({
         ))}
       </div>
 
-      {/* Trades for Current or Selected Day */}
+      {/* Trades Table for Current or Selected Day */}
       <div className="mt-6">
         <h3 className="text-lg font-semibold text-gray-300 mb-2">Trades on {currentDate}</h3>
-        <div className="space-y-2">
-          {dayTrades.map((trade, index) => {
-            const hasValidImage =
-              trade.image &&
-              (trade.image.startsWith('data:image') || /^[A-Za-z0-9+/=]+$/.test(trade.image));
-            const imageSrc =
-              trade.image && !trade.image.startsWith('data:image')
-                ? `data:image/png;base64,${trade.image}`
-                : trade.image;
+        {dayTrades.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-gray-200">
+              <thead>
+                <tr className="bg-gray-700">
+                  <th className="p-3">Market</th>
+                  <th className="p-3">Profit/Loss ($)</th>
+                  <th className="p-3">Tags</th>
+                  <th className="p-3">Stars</th>
+                  <th className="p-3">Strategy</th>
+                  <th className="p-3">Image</th>
+                  <th className="p-3">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {dayTrades.map((trade, index) => {
+                  const hasValidImage =
+                    trade.image &&
+                    (trade.image.startsWith('data:image') || /^[A-Za-z0-9+/=]+$/.test(trade.image));
+                  const imageSrc =
+                    trade.image && !trade.image.startsWith('data:image')
+                      ? `data:image/png;base64,${trade.image}`
+                      : trade.image;
 
-            return (
-              <div
-                key={index}
-                className="bg-gray-700 p-3 rounded-lg shadow flex justify-between items-center"
-              >
-                <div>
-                  <p className="text-white">
-                    {trade.market || 'N/A'} - ${trade.profitLossDollar?.toFixed(2) || '0.00'}
-                  </p>
-                  <p className="text-gray-400 text-sm">{trade.strategy || 'N/A'}</p>
-
-                  {hasValidImage ? (
-                    <img
-                      src={imageSrc}
-                      alt="Trade screenshot"
-                      className="w-16 h-16 object-cover rounded mt-2 cursor-pointer"
-                      onClick={() => openImageViewer(imageSrc)}
-                    />
-                  ) : (
-                    <div className="w-16 h-16 bg-gray-600 flex items-center justify-center rounded mt-2 text-white text-xs">
-                      No Image
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-        {dayTrades.length === 0 && (
+                  return (
+                    <tr key={index} className="border-t border-gray-600 hover:bg-gray-700">
+                      <td className="p-3">{trade.market || 'N/A'}</td>
+                      <td
+                        className="p-3"
+                        style={{
+                          color: trade.profitLossDollar >= 0 ? '#22c55e' : '#ef4444',
+                        }}
+                      >
+                        ${trade.profitLossDollar?.toFixed(2) || '0.00'}
+                      </td>
+                      <td className="p-3">{trade.tags?.join(', ') || 'None'}</td>
+                      <td className="p-3">
+                        {Array(trade.stars || 0)
+                          .fill('⭐')
+                          .join('') || '0 ⭐'}
+                      </td>
+                      <td className="p-3">{trade.strategy || 'N/A'}</td>
+                      <td className="p-3">
+                        {hasValidImage ? (
+                          <img
+                            src={imageSrc}
+                            alt="Trade screenshot"
+                            className="w-16 h-16 object-cover rounded cursor-pointer"
+                            onClick={() => openImageViewer(imageSrc)}
+                          />
+                        ) : (
+                          'No Image'
+                        )}
+                      </td>
+                      <td className="p-3">
+                        <button
+                          className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 smooth-transition"
+                          onClick={() => {/* Implement delete logic if needed */}}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : (
           <p className="mt-2 text-gray-400">No trades for {currentDate}.</p>
         )}
       </div>
