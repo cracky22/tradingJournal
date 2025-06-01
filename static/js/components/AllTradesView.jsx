@@ -1,62 +1,84 @@
 const { useState, useEffect } = React;
 
 function AllTradesView({
-  t, // trades: Object containing trades for the current profile
-  gf, // getFTrades: Function to get filtered trades
-  fs, // filterStars: Current star filter (null or number)
-  sfs, // setFilterStars: Function to set star filter
-  fm, // filterMarket: Current market filter ('All' or market name)
-  sfm, // setFilterMarket: Function to set market filter
-  ft, // filterTag: Current tag filter ('All' or tag name)
-  sft, // setFilterTag: Function to set tag filter
-  fp, // filterPeriod: Current period filter ('All', 'Week', 'Month', 'Quarter')
-  sfp, // setFilterPeriod: Function to set period filter
-  fst, // filterStartDate: Start date for date range filter
-  sfst, // setFilterStartDate: Function to set start date
-  fe, // filterEndDate: End date for date range filter
-  sfe, // setFilterEndDate: Function to set end date
-  dt, // delTrade: Function to delete a trade
-  tg, // tags: Array of available tags
-  st, // strategies: Array of available strategies
-  fi, // fetchImage: Function to fetch trade image
-  cp, // currentProfile: Current profile name
+  t, // trades
+  gf, // getFTrades
+  fs, // filterStars
+  sfs, // setFilterStars
+  fm, // filterMarket
+  sfm, // setFilterMarket
+  ft, // filterTag
+  sft, // setFilterTag
+  fp, // filterPeriod
+  sfp, // setFilterPeriod
+  fst, // filterStartDate
+  sfst, // setFilterStartDate
+  fe, // filterEndDate
+  sfe, // setFilterEndDate
+  dt, // delTrade
+  tg, // tags
+  st, // strategies
+  fi, // fetchImage
+  cp, // currentProfile
 }) {
   const [filteredTrades, setFilteredTrades] = useState([]);
   const [images, setImages] = useState({});
 
   // Update filtered trades when filters or trades change
   useEffect(() => {
+    console.log("[AllTradesView] Running filter with current filters:", {
+      filterMarket: fm,
+      filterPeriod: fp,
+      filterTag: ft,
+      filterStars: fs,
+      filterStartDate: fst,
+      filterEndDate: fe,
+    });
     const trades = gf();
+    console.log("[AllTradesView] Filtered trades count:", trades.length);
     setFilteredTrades(trades);
   }, [t, fm, fp, ft, fs, fst, fe, gf]);
 
   // Fetch images for visible trades
   useEffect(() => {
     const loadImages = async () => {
+      console.log("[AllTradesView] Starting image load for filtered trades");
       const newImages = {};
       for (const trade of filteredTrades) {
         if (trade.imageRef) {
-          const key = `${trade.date}-${filteredTrades.indexOf(trade)}`;
+          const index = filteredTrades.indexOf(trade);
+          const key = `${trade.date}-${index}`;
           if (!images[key]) {
-            const image = await fi(
-              cp,
-              trade.date,
-              filteredTrades.indexOf(trade)
-            );
-            newImages[key] = image;
+            console.log(`[AllTradesView] Fetching image for trade key: ${key}`);
+            try {
+              const image = await fi(cp, trade.date, index);
+              newImages[key] = image;
+              console.log(`[AllTradesView] Image fetched for key: ${key}`);
+            } catch (error) {
+              console.error(`[AllTradesView] Error fetching image for key: ${key}`, error);
+            }
+          } else {
+            console.log(`[AllTradesView] Image already loaded for key: ${key}`);
           }
         }
       }
       if (Object.keys(newImages).length > 0) {
+        console.log("[AllTradesView] Updating images state with new images:", Object.keys(newImages));
         setImages((prev) => ({ ...prev, ...newImages }));
+      } else {
+        console.log("[AllTradesView] No new images to load");
       }
     };
     loadImages();
   }, [filteredTrades, cp, fi, images]);
 
   const handleDeleteTrade = (date, index) => {
+    console.log(`[AllTradesView] Delete requested for trade at date: ${date}, index: ${index}`);
     if (window.confirm("Are you sure you want to delete this trade?")) {
+      console.log(`[AllTradesView] Confirmed delete for trade at date: ${date}, index: ${index}`);
       dt(date, index);
+    } else {
+      console.log("[AllTradesView] Delete cancelled by user");
     }
   };
 
@@ -70,7 +92,10 @@ function AllTradesView({
           <label className="block text-gray-400 mb-1">Market</label>
           <select
             value={fm}
-            onChange={(e) => sfm(e.target.value)}
+            onChange={(e) => {
+              console.log("[AllTradesView] Market filter changed to:", e.target.value);
+              sfm(e.target.value);
+            }}
             className="w-full p-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 smooth-transition"
           >
             <option value="All">All Markets</option>
@@ -85,7 +110,10 @@ function AllTradesView({
           <label className="block text-gray-400 mb-1">Period</label>
           <select
             value={fp}
-            onChange={(e) => sfp(e.target.value)}
+            onChange={(e) => {
+              console.log("[AllTradesView] Period filter changed to:", e.target.value);
+              sfp(e.target.value);
+            }}
             className="w-full p-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 smooth-transition"
           >
             <option value="All">All Time</option>
@@ -98,7 +126,10 @@ function AllTradesView({
           <label className="block text-gray-400 mb-1">Tag</label>
           <select
             value={ft}
-            onChange={(e) => sft(e.target.value)}
+            onChange={(e) => {
+              console.log("[AllTradesView] Tag filter changed to:", e.target.value);
+              sft(e.target.value);
+            }}
             className="w-full p-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 smooth-transition"
           >
             <option value="All">All Tags</option>
@@ -113,9 +144,11 @@ function AllTradesView({
           <label className="block text-gray-400 mb-1">Stars</label>
           <select
             value={fs === null ? "All" : fs}
-            onChange={(e) =>
-              sfs(e.target.value === "All" ? null : Number(e.target.value))
-            }
+            onChange={(e) => {
+              const val = e.target.value === "All" ? null : Number(e.target.value);
+              console.log("[AllTradesView] Stars filter changed to:", val);
+              sfs(val);
+            }}
             className="w-full p-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 smooth-transition"
           >
             <option value="All">All Stars</option>
@@ -131,7 +164,10 @@ function AllTradesView({
           <input
             type="date"
             value={fst}
-            onChange={(e) => sfst(e.target.value)}
+            onChange={(e) => {
+              console.log("[AllTradesView] Start date filter changed to:", e.target.value);
+              sfst(e.target.value);
+            }}
             className="w-full p-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 smooth-transition"
           />
         </div>
@@ -140,7 +176,10 @@ function AllTradesView({
           <input
             type="date"
             value={fe}
-            onChange={(e) => sfe(e.target.value)}
+            onChange={(e) => {
+              console.log("[AllTradesView] End date filter changed to:", e.target.value);
+              sfe(e.target.value);
+            }}
             className="w-full p-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 smooth-transition"
           />
         </div>
@@ -203,7 +242,10 @@ function AllTradesView({
                     </td>
                     <td className="p-3">
                       <button
-                        onClick={() => handleDeleteTrade(trade.date, index)}
+                        onClick={() => {
+                          console.log(`[AllTradesView] Delete button clicked for trade key: ${imageKey}`);
+                          handleDeleteTrade(trade.date, index);
+                        }}
                         className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 smooth-transition"
                       >
                         Delete
