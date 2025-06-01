@@ -1,20 +1,16 @@
 const { useState, useEffect } = React;
 
-function ProfilesView() {
+function ProfilesView({ loadProfiles }) {
   const [profiles, setProfiles] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const loadProfiles = async () => {
+  const fetchProfiles = async () => {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await fetch('/api/profiles'); // Passe die API-URL an
-      if (!response.ok) {
-        throw new Error('Netzwerkfehler beim Laden der Profile');
-      }
-      const data = await response.json();
-      setProfiles(data);
+      const profilesData = await loadProfiles(); // Verwende die loadProfiles-Funktion aus App.jsx
+      setProfiles(profilesData);
       setIsLoading(false);
     } catch (err) {
       console.error('Fehler beim Laden der Profile:', err);
@@ -24,11 +20,11 @@ function ProfilesView() {
   };
 
   useEffect(() => {
-    loadProfiles();
-  }, []);
+    fetchProfiles();
+  }, [loadProfiles]);
 
   const handleRetry = () => {
-    loadProfiles();
+    fetchProfiles();
   };
 
   if (isLoading) {
