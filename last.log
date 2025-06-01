@@ -1,1 +1,2 @@
-2025-06-01 13:08:24,318 [INFO] Starting server on http://localhost:2108
+2025-06-01 13:10:58,252 [INFO] Starting server on http://localhost:2108
+2025-06-01 13:10:59,466 [ERROR] index.html not found at static\index.html
