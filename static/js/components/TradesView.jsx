@@ -14,18 +14,18 @@ function TradesView({
   edit, // edit: Index of trade being edited (null or number)
   setEdit, // setEdit: Function to set edit index
   fi, // fetchImage: Function to fetch trade image
-  cp // currentProfile: Current profile name
+  cp, // currentProfile: Current profile name
 }) {
   const [formData, setFormData] = useState({
-    market: '',
-    profitLossDollar: '',
+    market: "",
+    profitLossDollar: "",
     tags: [],
     stars: 0,
-    strategy: '',
-    tradeDuration: '',
-    image: null
+    strategy: "",
+    tradeDuration: "",
+    image: null,
   });
-  const [newTag, setNewTag] = useState('');
+  const [newTag, setNewTag] = useState("");
   const [trades, setTrades] = useState([]);
   const [images, setImages] = useState({});
 
@@ -60,13 +60,13 @@ function TradesView({
   useEffect(() => {
     if (edit !== null && trades[edit]) {
       setFormData({
-        market: trades[edit].market || '',
-        profitLossDollar: trades[edit].profitLossDollar || '',
+        market: trades[edit].market || "",
+        profitLossDollar: trades[edit].profitLossDollar || "",
         tags: trades[edit].tags || [],
         stars: trades[edit].stars || 0,
-        strategy: trades[edit].strategy || '',
-        tradeDuration: trades[edit].tradeDuration || '',
-        image: null
+        strategy: trades[edit].strategy || "",
+        tradeDuration: trades[edit].tradeDuration || "",
+        image: null,
       });
     }
   }, [edit, trades]);
@@ -90,9 +90,9 @@ function TradesView({
     if (trimmedTag && !tg.includes(trimmedTag)) {
       ag(trimmedTag);
       setFormData((prev) => ({ ...prev, tags: [...prev.tags, trimmedTag] }));
-      setNewTag('');
+      setNewTag("");
     } else if (tg.includes(trimmedTag)) {
-      alert('Tag already exists.');
+      alert("Tag already exists.");
     }
   };
 
@@ -101,7 +101,7 @@ function TradesView({
       dg(tag);
       setFormData((prev) => ({
         ...prev,
-        tags: prev.tags.filter((t) => t !== tag)
+        tags: prev.tags.filter((t) => t !== tag),
       }));
     }
   };
@@ -123,24 +123,24 @@ function TradesView({
       stars: parseInt(formData.stars) || 0,
       strategy: formData.strategy,
       tradeDuration: parseFloat(formData.tradeDuration) || 0,
-      imageRef: formData.image ? `${d}-${trades.length}` : null
+      imageRef: formData.image ? `${d}-${trades.length}` : null,
     };
 
     try {
       if (formData.image) {
         const formDataToSend = new FormData();
-        formDataToSend.append('image', formData.image);
-        formDataToSend.append('profile', cp);
-        formDataToSend.append('date', d);
-        formDataToSend.append('index', edit !== null ? edit : trades.length);
+        formDataToSend.append("image", formData.image);
+        formDataToSend.append("profile", cp);
+        formDataToSend.append("date", d);
+        formDataToSend.append("index", edit !== null ? edit : trades.length);
 
-        const response = await fetch('/api/upload_image', {
-          method: 'POST',
+        const response = await fetch("/api/upload_image", {
+          method: "POST",
           body: formDataToSend,
-          signal: AbortSignal.timeout(10000)
+          signal: AbortSignal.timeout(10000),
         });
         if (!response.ok) {
-          throw new Error('Failed to upload image');
+          throw new Error("Failed to upload image");
         }
       }
 
@@ -152,17 +152,17 @@ function TradesView({
       }
 
       setFormData({
-        market: '',
-        profitLossDollar: '',
+        market: "",
+        profitLossDollar: "",
         tags: [],
         stars: 0,
-        strategy: '',
-        tradeDuration: '',
-        image: null
+        strategy: "",
+        tradeDuration: "",
+        image: null,
       });
     } catch (error) {
-      console.error('Error submitting trade:', error);
-      alert(`Failed to submit trade: ${error.message || 'Network error'}`);
+      console.error("Error submitting trade:", error);
+      alert(`Failed to submit trade: ${error.message || "Network error"}`);
     }
   };
 
@@ -171,7 +171,7 @@ function TradesView({
   };
 
   const handleDelete = (index) => {
-    if (window.confirm('Are you sure you want to delete this trade?')) {
+    if (window.confirm("Are you sure you want to delete this trade?")) {
       dt(d, index);
     }
   };
@@ -179,13 +179,13 @@ function TradesView({
   const handleCancel = () => {
     setEdit(null);
     setFormData({
-      market: '',
-      profitLossDollar: '',
+      market: "",
+      profitLossDollar: "",
       tags: [],
       stars: 0,
-      strategy: '',
-      tradeDuration: '',
-      image: null
+      strategy: "",
+      tradeDuration: "",
+      image: null,
     });
   };
 
@@ -196,7 +196,7 @@ function TradesView({
       {/* Trade Form */}
       <div className="mb-6 bg-gray-700 p-4 rounded-lg">
         <h3 className="text-lg font-semibold text-gray-300 mb-2">
-          {edit !== null ? 'Edit Trade' : 'Add Trade'}
+          {edit !== null ? "Edit Trade" : "Add Trade"}
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -227,7 +227,9 @@ function TradesView({
             />
           </div>
           <div>
-            <label className="block text-gray-400 mb-1">Trade Duration (min)</label>
+            <label className="block text-gray-400 mb-1">
+              Trade Duration (min)
+            </label>
             <input
               type="number"
               name="tradeDuration"
@@ -247,7 +249,7 @@ function TradesView({
             >
               {[0, 1, 2, 3, 4, 5].map((star) => (
                 <option key={star} value={star}>
-                  {star} Star{star !== 1 ? 's' : ''}
+                  {star} Star{star !== 1 ? "s" : ""}
                 </option>
               ))}
             </select>
@@ -287,8 +289,8 @@ function TradesView({
                 onClick={() => handleTagChange(tag)}
                 className={`px-2 py-1 rounded-lg cursor-pointer smooth-transition ${
                   formData.tags.includes(tag)
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-600 text-gray-200'
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-600 text-gray-200"
                 }`}
               >
                 {tag}
@@ -300,7 +302,7 @@ function TradesView({
               type="text"
               value={newTag}
               onChange={(e) => setNewTag(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleAddTag()}
+              onKeyPress={(e) => e.key === "Enter" && handleAddTag()}
               placeholder="New tag"
               className="flex-grow p-2 bg-gray-600 border border-gray-500 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 smooth-transition"
             />
@@ -308,7 +310,9 @@ function TradesView({
               onClick={handleAddTag}
               disabled={!newTag.trim()}
               className={`px-4 py-2 text-white rounded-lg smooth-transition ${
-                newTag.trim() ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-600 cursor-not-allowed'
+                newTag.trim()
+                  ? "bg-blue-600 hover:bg-blue-700"
+                  : "bg-gray-600 cursor-not-allowed"
               }`}
             >
               Add Tag
@@ -336,9 +340,12 @@ function TradesView({
             onClick={handleSubmit}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 smooth-transition"
           >
-            {edit !== null ? 'Update Trade' : 'Add Trade'}
+            {edit !== null ? "Update Trade" : "Add Trade"}
           </button>
-          {(edit !== null || formData.market || formData.profitLossDollar || formData.tags.length > 0) && (
+          {(edit !== null ||
+            formData.market ||
+            formData.profitLossDollar ||
+            formData.tags.length > 0) && (
             <button
               onClick={handleCancel}
               className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 smooth-transition"
@@ -371,15 +378,24 @@ function TradesView({
               {trades.map((trade, index) => {
                 const imageKey = `${d}-${index}`;
                 return (
-                  <tr key={imageKey} className="border-t border-gray-600 hover:bg-gray-700">
-                    <td className="p-3">{trade.market || 'N/A'}</td>
-                    <td className="p-3" style={{ color: trade.profitLossDollar >= 0 ? '#22c55e' : '#ef4444' }}>
-                      {trade.profitLossDollar?.toFixed(2) || '0.00'}
+                  <tr
+                    key={imageKey}
+                    className="border-t border-gray-600 hover:bg-gray-700"
+                  >
+                    <td className="p-3">{trade.market || "N/A"}</td>
+                    <td
+                      className="p-3"
+                      style={{
+                        color:
+                          trade.profitLossDollar >= 0 ? "#22c55e" : "#ef4444",
+                      }}
+                    >
+                      {trade.profitLossDollar?.toFixed(2) || "0.00"}
                     </td>
-                    <td className="p-3">{trade.tags?.join(', ') || 'None'}</td>
+                    <td className="p-3">{trade.tags?.join(", ") || "None"}</td>
                     <td className="p-3">{trade.stars || 0} ⭐</td>
-                    <td className="p-3">{trade.strategy || 'N/A'}</td>
-                    <td className="p-3">{trade.tradeDuration || 'N/A'}</td>
+                    <td className="p-3">{trade.strategy || "N/A"}</td>
+                    <td className="p-3">{trade.tradeDuration || "N/A"}</td>
                     <td className="p-3">
                       {trade.imageRef ? (
                         images[imageKey] ? (
@@ -392,7 +408,7 @@ function TradesView({
                           <span className="text-gray-400">Loading...</span>
                         )
                       ) : (
-                        'No Image'
+                        "No Image"
                       )}
                     </td>
                     <td className="p-3 flex gap-2">

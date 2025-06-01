@@ -3,28 +3,32 @@ const { useState } = React;
 function StrategiesView({
   strategies, // Array of available strategies (e.g., ['Trendfolge', 'Volumen', ...])
   addStrategy, // Function to add a new strategy
-  delStrategy // Function to delete a strategy
+  delStrategy, // Function to delete a strategy
 }) {
-  const [newStrategy, setNewStrategy] = useState('');
+  const [newStrategy, setNewStrategy] = useState("");
 
   const handleAddStrategy = () => {
     const trimmedStrategy = newStrategy.trim();
     if (trimmedStrategy && !strategies.includes(trimmedStrategy)) {
       addStrategy(trimmedStrategy);
-      setNewStrategy('');
+      setNewStrategy("");
     } else if (strategies.includes(trimmedStrategy)) {
-      alert('Strategy already exists.');
+      alert("Strategy already exists.");
     }
   };
 
   const handleDeleteStrategy = (strategy) => {
-    if (window.confirm(`Are you sure you want to delete the strategy "${strategy}"?`)) {
+    if (
+      window.confirm(
+        `Are you sure you want to delete the strategy "${strategy}"?`
+      )
+    ) {
       delStrategy(strategy);
     }
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       handleAddStrategy();
     }
   };
@@ -48,7 +52,9 @@ function StrategiesView({
           onClick={handleAddStrategy}
           disabled={!newStrategy.trim()}
           className={`px-4 py-2 text-white rounded-lg smooth-transition ${
-            newStrategy.trim() ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-600 cursor-not-allowed'
+            newStrategy.trim()
+              ? "bg-blue-600 hover:bg-blue-700"
+              : "bg-gray-600 cursor-not-allowed"
           }`}
         >
           Add Strategy

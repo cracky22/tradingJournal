@@ -8,7 +8,7 @@ function DayOverview({
   gc, // getCData: Function to get chart data for cumulative profit
   dt, // delTrade: Function to delete a trade
   fi, // fetchImage: Function to fetch trade image
-  cp // currentProfile: Current profile name
+  cp, // currentProfile: Current profile name
 }) {
   const [trades, setTrades] = useState([]);
   const [images, setImages] = useState({});
@@ -48,30 +48,38 @@ function DayOverview({
       if (chartInstance.current) {
         chartInstance.current.destroy();
       }
-      const ctx = chartRef.current.getContext('2d');
+      const ctx = chartRef.current.getContext("2d");
       chartInstance.current = new Chart(ctx, {
-        type: 'line',
+        type: "line",
         data: gc(trades),
         options: {
           responsive: true,
           scales: {
-            x: { title: { display: true, text: 'Trade', color: '#e5e7eb' }, ticks: { color: '#e5e7eb' } },
-            y: { title: { display: true, text: 'Profit ($)', color: '#e5e7eb' }, ticks: { color: '#e5e7eb' } }
+            x: {
+              title: { display: true, text: "Trade", color: "#e5e7eb" },
+              ticks: { color: "#e5e7eb" },
+            },
+            y: {
+              title: { display: true, text: "Profit ($)", color: "#e5e7eb" },
+              ticks: { color: "#e5e7eb" },
+            },
           },
           plugins: {
-            legend: { labels: { color: '#e5e7eb' } },
+            legend: { labels: { color: "#e5e7eb" } },
             tooltip: {
               callbacks: {
                 label: (context) => {
                   const trade = context.raw.tradeData;
                   return trade
-                    ? `Profit: $${context.raw.y.toFixed(2)}, Market: ${trade.market || 'N/A'}`
+                    ? `Profit: $${context.raw.y.toFixed(2)}, Market: ${
+                        trade.market || "N/A"
+                      }`
                     : `Profit: $${context.raw.y.toFixed(2)}`;
-                }
-              }
-            }
-          }
-        }
+                },
+              },
+            },
+          },
+        },
       });
     }
 
@@ -83,7 +91,7 @@ function DayOverview({
   }, [trades, gc]);
 
   const handleDeleteTrade = (index) => {
-    if (window.confirm('Are you sure you want to delete this trade?')) {
+    if (window.confirm("Are you sure you want to delete this trade?")) {
       dt(d, index);
     }
   };
@@ -110,14 +118,19 @@ function DayOverview({
       {/* Total Profit */}
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-gray-300">Total Profit</h3>
-        <p className="text-2xl" style={{ color: gp(d) >= 0 ? '#22c55e' : '#ef4444' }}>
+        <p
+          className="text-2xl"
+          style={{ color: gp(d) >= 0 ? "#22c55e" : "#ef4444" }}
+        >
           ${gp(d).toFixed(2)}
         </p>
       </div>
 
       {/* Cumulative Profit Chart */}
       <div className="bg-gray-700 p-4 rounded-lg mb-6">
-        <h3 className="text-lg font-semibold text-gray-300 mb-2">Cumulative Profit</h3>
+        <h3 className="text-lg font-semibold text-gray-300 mb-2">
+          Cumulative Profit
+        </h3>
         <canvas ref={chartRef} className="w-full h-64"></canvas>
       </div>
 
@@ -142,14 +155,23 @@ function DayOverview({
               {trades.map((trade, index) => {
                 const imageKey = `${d}-${index}`;
                 return (
-                  <tr key={imageKey} className="border-t border-gray-600 hover:bg-gray-700">
-                    <td className="p-3">{trade.market || 'N/A'}</td>
-                    <td className="p-3" style={{ color: trade.profitLossDollar >= 0 ? '#22c55e' : '#ef4444' }}>
-                      {trade.profitLossDollar?.toFixed(2) || '0.00'}
+                  <tr
+                    key={imageKey}
+                    className="border-t border-gray-600 hover:bg-gray-700"
+                  >
+                    <td className="p-3">{trade.market || "N/A"}</td>
+                    <td
+                      className="p-3"
+                      style={{
+                        color:
+                          trade.profitLossDollar >= 0 ? "#22c55e" : "#ef4444",
+                      }}
+                    >
+                      {trade.profitLossDollar?.toFixed(2) || "0.00"}
                     </td>
-                    <td className="p-3">{trade.tags?.join(', ') || 'None'}</td>
+                    <td className="p-3">{trade.tags?.join(", ") || "None"}</td>
                     <td className="p-3">{trade.stars || 0} ⭐</td>
-                    <td className="p-3">{trade.strategy || 'N/A'}</td>
+                    <td className="p-3">{trade.strategy || "N/A"}</td>
                     <td className="p-3">
                       {trade.imageRef ? (
                         images[imageKey] ? (
@@ -162,7 +184,7 @@ function DayOverview({
                           <span className="text-gray-400">Loading...</span>
                         )
                       ) : (
-                        'No Image'
+                        "No Image"
                       )}
                     </td>
                     <td className="p-3">

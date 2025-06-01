@@ -9,7 +9,7 @@ function CalendarView({
   y, // year: Current year (e.g., 2025)
   sm, // setMonth: Function to set month
   sy, // setYear: Function to set year
-  so // setOvDate: Function to set overview date (navigate to DayOverview)
+  so, // setOvDate: Function to set overview date (navigate to DayOverview)
 }) {
   // Generate calendar days for the current month
   const getCalendarDays = () => {
@@ -26,7 +26,9 @@ function CalendarView({
 
     // Add days of the month
     for (let i = 1; i <= totalDays; i++) {
-      const dateStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+      const dateStr = `${y}-${String(m + 1).padStart(2, "0")}-${String(
+        i
+      ).padStart(2, "0")}`;
       days.push({ date: dateStr, profit: gp(dateStr) });
     }
 
@@ -57,14 +59,24 @@ function CalendarView({
   };
 
   const monthNames = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ];
 
   return (
     <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
       <h2 className="text-2xl font-bold text-white mb-4">Calendar</h2>
-      
+
       {/* Month Navigation */}
       <div className="flex justify-between items-center mb-4">
         <button
@@ -87,8 +99,11 @@ function CalendarView({
       {/* Calendar Grid */}
       <div className="grid grid-cols-7 gap-1">
         {/* Day Names */}
-        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
-          <div key={day} className="text-center text-gray-400 font-semibold p-2">
+        {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
+          <div
+            key={day}
+            className="text-center text-gray-400 font-semibold p-2"
+          >
             {day}
           </div>
         ))}
@@ -102,17 +117,20 @@ function CalendarView({
               day
                 ? day.profit !== 0
                   ? day.profit > 0
-                    ? 'bg-green-600 hover:bg-green-500 cursor-pointer'
-                    : 'bg-red-600 hover:bg-red-500 cursor-pointer'
-                  : 'bg-gray-700 hover:bg-gray-600 cursor-pointer'
-                : 'bg-gray-900'
-            } ${day && day.date === d ? 'ring-2 ring-blue-500' : ''}`}
+                    ? "bg-green-600 hover:bg-green-500 cursor-pointer"
+                    : "bg-red-600 hover:bg-red-500 cursor-pointer"
+                  : "bg-gray-700 hover:bg-gray-600 cursor-pointer"
+                : "bg-gray-900"
+            } ${day && day.date === d ? "ring-2 ring-blue-500" : ""}`}
           >
             {day ? (
               <>
                 <div className="text-white">{new Date(day.date).getDate()}</div>
                 {day.profit !== 0 && (
-                  <div className="text-sm" style={{ color: day.profit > 0 ? '#22c55e' : '#ef4444' }}>
+                  <div
+                    className="text-sm"
+                    style={{ color: day.profit > 0 ? "#22c55e" : "#ef4444" }}
+                  >
                     ${day.profit.toFixed(2)}
                   </div>
                 )}

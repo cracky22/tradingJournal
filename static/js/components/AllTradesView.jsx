@@ -38,7 +38,11 @@ function AllTradesView({
         if (trade.imageRef) {
           const key = `${trade.date}-${filteredTrades.indexOf(trade)}`;
           if (!images[key]) {
-            const image = await fi(cp, trade.date, filteredTrades.indexOf(trade));
+            const image = await fi(
+              cp,
+              trade.date,
+              filteredTrades.indexOf(trade)
+            );
             newImages[key] = image;
           }
         }
@@ -51,7 +55,7 @@ function AllTradesView({
   }, [filteredTrades, cp, fi, images]);
 
   const handleDeleteTrade = (date, index) => {
-    if (window.confirm('Are you sure you want to delete this trade?')) {
+    if (window.confirm("Are you sure you want to delete this trade?")) {
       dt(date, index);
     }
   };
@@ -59,7 +63,7 @@ function AllTradesView({
   return (
     <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
       <h2 className="text-2xl font-bold text-white mb-4">All Trades</h2>
-      
+
       {/* Filter Controls */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div>
@@ -108,14 +112,16 @@ function AllTradesView({
         <div>
           <label className="block text-gray-400 mb-1">Stars</label>
           <select
-            value={fs === null ? 'All' : fs}
-            onChange={(e) => sfs(e.target.value === 'All' ? null : Number(e.target.value))}
+            value={fs === null ? "All" : fs}
+            onChange={(e) =>
+              sfs(e.target.value === "All" ? null : Number(e.target.value))
+            }
             className="w-full p-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 smooth-transition"
           >
             <option value="All">All Stars</option>
             {[0, 1, 2, 3, 4, 5].map((star) => (
               <option key={star} value={star}>
-                {star} Star{star !== 1 ? 's' : ''}
+                {star} Star{star !== 1 ? "s" : ""}
               </option>
             ))}
           </select>
@@ -162,15 +168,24 @@ function AllTradesView({
               {filteredTrades.map((trade, index) => {
                 const imageKey = `${trade.date}-${index}`;
                 return (
-                  <tr key={imageKey} className="border-t border-gray-600 hover:bg-gray-700">
+                  <tr
+                    key={imageKey}
+                    className="border-t border-gray-600 hover:bg-gray-700"
+                  >
                     <td className="p-3">{trade.date}</td>
-                    <td className="p-3">{trade.market || 'N/A'}</td>
-                    <td className="p-3" style={{ color: trade.profitLossDollar >= 0 ? '#22c55e' : '#ef4444' }}>
-                      {trade.profitLossDollar?.toFixed(2) || '0.00'}
+                    <td className="p-3">{trade.market || "N/A"}</td>
+                    <td
+                      className="p-3"
+                      style={{
+                        color:
+                          trade.profitLossDollar >= 0 ? "#22c55e" : "#ef4444",
+                      }}
+                    >
+                      {trade.profitLossDollar?.toFixed(2) || "0.00"}
                     </td>
-                    <td className="p-3">{trade.tags?.join(', ') || 'None'}</td>
+                    <td className="p-3">{trade.tags?.join(", ") || "None"}</td>
                     <td className="p-3">{trade.stars || 0} ⭐</td>
-                    <td className="p-3">{trade.strategy || 'N/A'}</td>
+                    <td className="p-3">{trade.strategy || "N/A"}</td>
                     <td className="p-3">
                       {trade.imageRef ? (
                         images[imageKey] ? (
@@ -183,7 +198,7 @@ function AllTradesView({
                           <span className="text-gray-400">Loading...</span>
                         )
                       ) : (
-                        'No Image'
+                        "No Image"
                       )}
                     </td>
                     <td className="p-3">
