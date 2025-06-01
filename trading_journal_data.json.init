@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Profile 1": {
+      "trades": {},
+      "tags": [],
+      "strategies": []
+    }
+  },
+  "currentProfile": "Profile 1"
+}
