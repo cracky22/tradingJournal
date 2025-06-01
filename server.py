@@ -51,22 +51,29 @@ last_modified_time = 0
 
 def load_data_from_file():
     try:
+        logger.info(f"Loading data from file: {DATA_FILE}")
         with open(DATA_FILE, 'r') as f:
-            return json.load(f)
+            data = json.load(f)
+        logger.info(f"Loaded data with profiles: {list(data.get('profiles', {}).keys())}")
+        return data
     except Exception as e:
-        logger.error(f"Error loading data: {str(e)}")
+        logger.exception("Error loading data from file, initializing new file.")
         init_data_file()
         return {'profiles': {}, 'currentProfile': 'Profile 1'}
 
 def load_data():
     global cached_data, last_modified_time
     try:
-        # Check if the file has been modified since last load
         current_mtime = os.path.getmtime(DATA_FILE)
+        logger.debug(f"Current mtime: {current_mtime}, Last mtime: {last_modified_time}")
         if cached_data is None or current_mtime > last_modified_time:
+            logger.info("Cache invalid or file changed, reloading data.")
             cached_data = load_data_from_file()
             last_modified_time = current_mtime
+        else:
+            logger.debug("Using cached data.")
     except FileNotFoundError:
+        logger.warning("Data file not found, initializing new one.")
         init_data_file()
         cached_data = {'profiles': {}, 'currentProfile': 'Profile 1'}
         last_modified_time = os.path.getmtime(DATA_FILE)
@@ -76,25 +83,23 @@ def save_data(data):
     global cached_data, last_modified_time
     try:
         backup_file = f"{DATA_FILE}.backup"
+        logger.info(f"Saving data to file: {DATA_FILE}")
         if os.path.exists(DATA_FILE):
             shutil.copy2(DATA_FILE, backup_file)
-            logger.info(f"Created backup: {backup_file}")
-        
+            logger.info(f"Backup created at: {backup_file}")
         with open(DATA_FILE, 'w') as f:
             json.dump(data, f, indent=2)
-        
+        logger.info(f"Data written to {DATA_FILE} (Profiles: {list(data.get('profiles', {}).keys())})")
         if os.path.exists(backup_file):
             os.remove(backup_file)
-            logger.info(f"Removed backup: {backup_file}")
-        
-        # Update the cache after saving
+            logger.info(f"Backup file {backup_file} removed after successful save.")
         cached_data = data
         last_modified_time = os.path.getmtime(DATA_FILE)
     except Exception as e:
-        logger.error(f"Error saving data: {str(e)}")
+        logger.exception("Error saving data, attempting to restore from backup.")
         if os.path.exists(backup_file):
             shutil.move(backup_file, DATA_FILE)
-            logger.info(f"Restored backup: {backup_file}")
+            logger.info(f"Restored backup from {backup_file} after failure.")
         raise
 
 def init_data_file():
@@ -117,36 +122,36 @@ def serve_index():
 
 @app.route('/api/get_profiles', methods=['GET'])
 def get_profiles():
+    logger.info("GET /api/get_profiles called.")
     try:
         data = load_data()
         profiles = list(data.get('profiles', {}).keys()) or ['Profile 1']
+        logger.info(f"Returning profiles: {profiles}")
         return jsonify({'profiles': profiles})
     except Exception as e:
-        logger.error(f"Error fetching profiles: {str(e)}")
+        logger.exception("Failed to get profiles.")
         return jsonify({'error': 'Failed to fetch profiles'}), 500
 
 @app.route('/api/get_data/<profile_name>', methods=['GET'])
 def get_data(profile_name):
+    logger.info(f"GET /api/get_data/{profile_name} called.")
     try:
         data = load_data()
         profile_data = data.get('profiles', {}).get(profile_name, {})
-        
+        logger.debug(f"Profile data keys: {list(profile_data.keys())}")
         trades = profile_data.get('trades', {})
-        modified_trades = {}
-        for date, trade_list in trades.items():
-            modified_trades[date] = [
-                {**trade, 'image': trade.get('image'), 'imageRef': None}
-                for trade in trade_list
-            ]
-        
-        response = {
+        modified_trades = {
+            date: [{**trade, 'image': trade.get('image'), 'imageRef': None} for trade in trade_list]
+            for date, trade_list in trades.items()
+        }
+        logger.info(f"Returning data for profile '{profile_name}', {len(modified_trades)} trade days found.")
+        return jsonify({
             'trades': modified_trades,
             'tags': profile_data.get('tags', []),
             'strategies': profile_data.get('strategies', [])
-        }
-        return jsonify(response)
+        })
     except Exception as e:
-        logger.error(f"Error fetching data for profile {profile_name}: {str(e)}")
+        logger.exception(f"Error fetching data for profile {profile_name}")
         return jsonify({'error': 'Failed to fetch data'}), 500
 
 @app.route('/api/get_image/<profile_name>/<date>/<index>', methods=['GET'])
@@ -172,77 +177,102 @@ def get_image(profile_name, date, index):
 
 @app.route('/api/upload_image', methods=['POST'])
 def upload_image():
+    logger.info("POST /api/upload_image called.")
     try:
         if 'image' not in request.files:
+            logger.warning("No image part in request.")
             return jsonify({'error': 'No image file provided'}), 400
-        
+
         file = request.files['image']
         if file.filename == '':
+            logger.warning("No file selected.")
             return jsonify({'error': 'No selected file'}), 400
-        
+
         profile = request.form.get('profile')
         date = request.form.get('date')
         index = request.form.get('index')
-        
+
+        logger.info(f"Upload params - profile: {profile}, date: {date}, index: {index}")
+
         if not all([profile, date, index]):
+            logger.warning("Missing form fields in upload.")
             return jsonify({'error': 'Missing profile, date, or index'}), 400
-        
+
         index = int(index)
-        
+
         data = load_data()
         profile_data = data.get('profiles', {}).get(profile, {})
         trades = profile_data.get('trades', {}).get(date, [])
-        
+
         if index < 0 or index > len(trades):
+            logger.warning(f"Invalid trade index: {index}")
             return jsonify({'error': 'Invalid trade index'}), 400
-        
-        # Convert image to base64
+
         image_data = base64.b64encode(file.read()).decode('utf-8')
-        
-        # Update trade with image data
+
         if index < len(trades):
+            logger.info(f"Updating image for trade {index} on {date}")
             trades[index]['image'] = image_data
         else:
-            trade = {'date': date, 'image': image_data}
-            trades.append(trade)
-        
+            logger.info(f"Appending new trade with image for {date}")
+            trades.append({'date': date, 'image': image_data})
+
         profile_data['trades'] = profile_data.get('trades', {})
         profile_data['trades'][date] = trades
         data['profiles'][profile] = profile_data
         save_data(data)
-        
+
         return jsonify({'message': 'Image uploaded successfully', 'image': image_data})
     except Exception as e:
-        logger.error(f"Error uploading image: {str(e)}")
+        logger.exception("Error during image upload")
         return jsonify({'error': 'Failed to upload image'}), 500
+
+def validate_data(data):
+    logger.debug(f"Validating submitted data: {type(data)} keys: {list(data.keys()) if isinstance(data, dict) else 'N/A'}")
+    if not isinstance(data, dict):
+        return False, "Data must be a dictionary"
+    if 'currentProfile' not in data:
+        return False, "Missing currentProfile"
+    if not isinstance(data.get('trades', {}), dict):
+        return False, "Trades must be a dictionary"
+    if not isinstance(data.get('tags', []), list):
+        return False, "Tags must be a list"
+    if not isinstance(data.get('strategies', []), list):
+        return False, "Strategies must be a list"
+    if not isinstance(data.get('profiles', []), list):
+        return False, "Profiles must be a list"
+    return True, ""
 
 @app.route('/api/submit_data', methods=['POST'])
 def submit_data():
+    logger.info("POST /api/submit_data called.")
     try:
         data = request.get_json()
         valid, error = validate_data(data)
         if not valid:
-            logger.error(f"Invalid data: {error}")
+            logger.error(f"Validation error: {error}")
             return jsonify({'error': error}), 400
-        
+
         current_data = load_data()
         profiles = data.get('profiles', ['Profile 1'])
         current_profile = data.get('currentProfile', 'Profile 1')
-    
-        current_data['profiles'] = current_data.get('profiles', {})
+
+        logger.info(f"Updating profiles: {profiles} with currentProfile: {current_profile}")
+
         for profile in profiles:
             current_data['profiles'][profile] = {
                 'trades': data.get('trades', {}).get(profile, {}),
                 'tags': data.get('tags', []),
                 'strategies': data.get('strategies', [])
             }
-        
+
         current_data['currentProfile'] = current_profile
-        
+
         save_data(current_data)
+        logger.info("Data successfully saved.")
         return jsonify({'message': 'Data saved successfully'})
     except Exception as e:
-        logger.error(f"Error submitting data: {str(e)}")
+        logger.exception("Error while submitting data")
         return jsonify({'error': 'Failed to save data'}), 500
 
 def validate_data(data):
@@ -261,12 +291,14 @@ def validate_data(data):
     return True, ""
 
 def signal_handler(sig, frame):
-    logger.info("Shutting down server...")
+    logger.info("Shutting down server via signal.")
     sys.exit(0)
 
 def open_browser():
+    logger.info(f"Opening browser to http://{HOST}:{PORT}")
     time.sleep(1)
     webbrowser.open(f"http://{HOST}:{PORT}")
+
 
 if __name__ == '__main__':
     signal.signal(signal.SIGINT, signal_handler)
