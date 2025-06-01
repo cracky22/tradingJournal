@@ -27,6 +27,7 @@ function TradesView({
   });
   const [newTag, setNewTag] = useState("");
   const [images, setImages] = useState({});
+  const [selectedImage, setSelectedImage] = useState(null);
 
   // Load trades for the selected date directly from props
   const dayTrades = t[d] || [];
@@ -199,8 +200,18 @@ function TradesView({
     });
   };
 
+  const openImageViewer = (imageSrc) => {
+    setSelectedImage(imageSrc);
+  };
+
+  const closeImageViewer = (e) => {
+    if (e.target === e.currentTarget || e.target.className.includes('close')) {
+      setSelectedImage(null);
+    }
+  };
+
   return (
-    <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
+    <div className="bg-gray-800 p-6 rounded-lg shadow-lg relative">
       <h2 className="text-2xl font-bold text-white mb-4">Trades for {d}</h2>
 
       {/* Trade Form */}
@@ -414,7 +425,8 @@ function TradesView({
                         <img
                           src={imageSrc}
                           alt="Trade screenshot"
-                          className="w-16 h-16 object-cover rounded"
+                          className="w-16 h-16 object-cover rounded cursor-pointer"
+                          onClick={() => openImageViewer(imageSrc)}
                           onError={() => {
                             console.error(`Failed to load image for ${imageKey}`);
                           }}
@@ -442,6 +454,28 @@ function TradesView({
               })}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Image Viewer */}
+      {selectedImage && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
+          onClick={closeImageViewer}
+        >
+          <div className="relative">
+            <img
+              src={selectedImage}
+              alt="Full-size trade screenshot"
+              className="max-h-[90vh] max-w-[90vw] object-contain"
+            />
+            <button
+              className="absolute top-2 right-2 text-white text-2xl close"
+              onClick={closeImageViewer}
+            >
+              ×
+            </button>
+          </div>
         </div>
       )}
     </div>
