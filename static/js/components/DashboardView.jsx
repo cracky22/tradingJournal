@@ -28,11 +28,19 @@ function DashboardView({
 
   // Calculate statistics
   useEffect(() => {
+    console.log('[DashboardView] useEffect for stats calculation started');
     const trades = gf() || [];
+    console.log(`[DashboardView] Retrieved ${trades.length} filtered trades`);
+
     const totalTrades = trades.length;
+    console.log(`[DashboardView] Total trades: ${totalTrades}`);
 
     // Total Profit/Loss
-    const totalProfitLoss = trades.reduce((sum, trade) => sum + (trade.profitLossDollar || 0), 0);
+    const totalProfitLoss = trades.reduce((sum, trade) => {
+      const val = trade.profitLossDollar || 0;
+      return sum + val;
+    }, 0);
+    console.log(`[DashboardView] Total Profit/Loss: ${totalProfitLoss}`);
 
     // Profit Factor: Sum of profits / Sum of losses
     const totalWins = trades
@@ -43,56 +51,72 @@ function DashboardView({
         .filter(trade => (trade.profitLossDollar || 0) < 0)
         .reduce((sum, trade) => sum + trade.profitLossDollar, 0)
     );
+    console.log(`[DashboardView] Total Wins: ${totalWins}, Total Losses: ${totalLosses}`);
+
     const profitFactor = totalLosses > 0 ? totalWins / totalLosses : totalWins > 0 ? Infinity : 0;
+    console.log(`[DashboardView] Profit Factor: ${profitFactor}`);
 
     // Average Profit/Trade
     const avgProfitPerTrade = totalTrades > 0 ? totalProfitLoss / totalTrades : 0;
+    console.log(`[DashboardView] Average Profit per Trade: ${avgProfitPerTrade}`);
 
     // Average Win
     const winningTrades = trades.filter(trade => (trade.profitLossDollar || 0) > 0);
+    console.log(`[DashboardView] Winning trades count: ${winningTrades.length}`);
     const avgWin = winningTrades.length > 0
       ? winningTrades.reduce((sum, trade) => sum + trade.profitLossDollar, 0) / winningTrades.length
       : 0;
+    console.log(`[DashboardView] Average Win: ${avgWin}`);
 
     // Max Win Trade
     const maxWinTrade = trades.length > 0
       ? Math.max(...trades.map(trade => trade.profitLossDollar || 0), 0)
       : 0;
+    console.log(`[DashboardView] Max Win Trade: ${maxWinTrade}`);
 
     // Average Loss
     const losingTrades = trades.filter(trade => (trade.profitLossDollar || 0) < 0);
+    console.log(`[DashboardView] Losing trades count: ${losingTrades.length}`);
     const avgLoss = losingTrades.length > 0
       ? losingTrades.reduce((sum, trade) => sum + trade.profitLossDollar, 0) / losingTrades.length
       : 0;
+    console.log(`[DashboardView] Average Loss: ${avgLoss}`);
 
     // Max Loss Trade
     const maxLossTrade = trades.length > 0
       ? Math.min(...trades.map(trade => trade.profitLossDollar || 0), 0)
       : 0;
+    console.log(`[DashboardView] Max Loss Trade: ${maxLossTrade}`);
 
     // Max Drawdown (simplified: max peak-to-trough decline in cumulative profit)
     let cumulative = 0;
     let peak = 0;
     let maxDrawdown = 0;
     trades.forEach(trade => {
-      cumulative += trade.profitLossDollar || 0;
+      const val = trade.profitLossDollar || 0;
+      cumulative += val;
       peak = Math.max(peak, cumulative);
       maxDrawdown = Math.min(maxDrawdown, cumulative - peak);
+      console.log(`[DashboardView] Cumulative: ${cumulative}, Peak: ${peak}, Max Drawdown: ${maxDrawdown}`);
     });
+    console.log(`[DashboardView] Final Max Drawdown: ${maxDrawdown}`);
 
     // Win Rate (overall)
     const wins = trades.filter(trade => (trade.profitLossDollar || 0) > 0);
     const winRate = totalTrades > 0 ? (wins.length / totalTrades) * 100 : 0;
+    console.log(`[DashboardView] Win Rate: ${winRate}%`);
 
     // Long Win Rate (with fallback if direction is missing)
     const longTrades = trades.filter(trade => trade.direction === 'Long' || !trade.direction);
     const longWins = longTrades.filter(trade => (trade.profitLossDollar || 0) > 0);
     const longWinRate = longTrades.length > 0 ? (longWins.length / longTrades.length) * 100 : 0;
+    console.log(`[DashboardView] Long Trades: ${longTrades.length}, Long Wins: ${longWins.length}, Long Win Rate: ${longWinRate}%`);
 
     // Short Win Rate
     const shortTrades = trades.filter(trade => trade.direction === 'Short');
     const shortWins = shortTrades.filter(trade => (trade.profitLossDollar || 0) > 0);
     const shortWinRate = shortTrades.length > 0 ? (shortWins.length / shortTrades.length) * 100 : 0;
+    console.log(`[DashboardView] Short Trades: ${shortTrades.length}, Short Wins: ${shortWins.length}, Short Win Rate: ${shortWinRate}%`);
 
     setStats({
       totalProfitLoss,
@@ -104,22 +128,28 @@ function DashboardView({
       avgLoss,
       maxLossTrade,
       maxDrawdown,
-      winRate, // Neue Statistik
+      winRate,
       longWinRate,
       shortWinRate
     });
+
+    console.log('[DashboardView] Stats state updated');
   }, [t, gf]);
 
   // Initialize Cumulative Profit Chart
   useEffect(() => {
+    console.log('[DashboardView] Initializing Cumulative Profit Chart');
     if (profitChartRef.current) {
       if (profitChartInstance.current) {
+        console.log('[DashboardView] Destroying existing Cumulative Profit Chart instance');
         profitChartInstance.current.destroy();
       }
       const ctx = profitChartRef.current.getContext('2d');
+      const chartData = gc(gf() || []);
+      console.log('[DashboardView] Chart data for cumulative profit:', chartData);
       profitChartInstance.current = new Chart(ctx, {
         type: 'line',
-        data: gc(gf() || []),
+        data: chartData,
         options: {
           responsive: true,
           scales: {
@@ -136,10 +166,12 @@ function DashboardView({
           }
         }
       });
+      console.log('[DashboardView] Cumulative Profit Chart initialized');
     }
 
     return () => {
       if (profitChartInstance.current) {
+        console.log('[DashboardView] Cleaning up Cumulative Profit Chart instance');
         profitChartInstance.current.destroy();
       }
     };
@@ -147,14 +179,18 @@ function DashboardView({
 
   // Initialize Time Performance Chart
   useEffect(() => {
+    console.log('[DashboardView] Initializing Time Performance Chart');
     if (timePerfChartRef.current) {
       if (timePerfChartInstance.current) {
+        console.log('[DashboardView] Destroying existing Time Performance Chart instance');
         timePerfChartInstance.current.destroy();
       }
       const ctx = timePerfChartRef.current.getContext('2d');
+      const chartData = gtp(gf() || []);
+      console.log('[DashboardView] Chart data for time performance:', chartData);
       timePerfChartInstance.current = new Chart(ctx, {
         type: 'scatter',
-        data: gtp(gf() || []),
+        data: chartData,
         options: {
           responsive: true,
           scales: {
@@ -171,10 +207,12 @@ function DashboardView({
           }
         }
       });
+      console.log('[DashboardView] Time Performance Chart initialized');
     }
 
     return () => {
       if (timePerfChartInstance.current) {
+        console.log('[DashboardView] Cleaning up Time Performance Chart instance');
         timePerfChartInstance.current.destroy();
       }
     };
