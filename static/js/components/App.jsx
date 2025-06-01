@@ -32,31 +32,9 @@ function App() {
 
   // Load data from sessionStorage or server
   const loadFromSessionStorage = () => {
-    const storedData = sessionStorage.getItem("tradingJournalData");
-    if (storedData) {
-      try {
-        const parsed = JSON.parse(storedData);
-        const validProfiles = parsed.profiles && Array.isArray(parsed.profiles) ? parsed.profiles : ["Profile 1"];
-        setProfiles(validProfiles);
-        setCurrentProfile(parsed.currentProfile || validProfiles[0] || "Profile 1");
-        setTrades(parsed.trades || {});
-        setTags(parsed.tags || []);
-        setStrategies(parsed.strategies || [
-          "Trendfolge",
-          "Volumen",
-          "Fibonacci",
-          "Sweep",
-          "Range",
-          "RAIN",
-        ]);
-        return true;
-      } catch (e) {
-        console.error("Error parsing sessionStorage data:", e);
-        sessionStorage.removeItem("tradingJournalData");
-        return false;
-      }
-    }
-    return false;
+    // Remove sessionStorage data to force fetching from server on page load
+    sessionStorage.removeItem("tradingJournalData");
+    return false; // Always return false to trigger fetchAllData
   };
 
   // Save data to sessionStorage
@@ -142,7 +120,7 @@ function App() {
     }
   };
 
-  // Load profiles function for ProfilesView
+  // Load profiles function for ProfilesView (if needed in the future)
   const loadProfiles = async () => {
     try {
       const response = await fetch("/api/get_profiles", {
