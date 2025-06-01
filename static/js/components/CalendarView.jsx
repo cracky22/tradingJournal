@@ -3,6 +3,8 @@ const { useState } = React;
 function CalendarView({
   t, d, sd, gp, m, y, sm, sy, so
 }) {
+  const [selectedImage, setSelectedImage] = useState(null);
+
   const getCalendarDays = () => {
     const firstDay = new Date(y, m, 1);
     const lastDay = new Date(y, m + 1, 0);
@@ -45,6 +47,16 @@ function CalendarView({
     so(date);
   };
 
+  const openImageViewer = (imageSrc) => {
+    setSelectedImage(imageSrc);
+  };
+
+  const closeImageViewer = (e) => {
+    if (e.target === e.currentTarget || e.target.className.includes('close')) {
+      setSelectedImage(null);
+    }
+  };
+
   const monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
@@ -53,7 +65,7 @@ function CalendarView({
   const dayTrades = t[d] || [];
 
   return (
-    <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
+    <div className="bg-gray-800 p-6 rounded-lg shadow-lg relative">
       <h2 className="text-2xl font-bold text-white mb-4">Calendar</h2>
 
       <div className="flex justify-between items-center mb-4">
@@ -120,6 +132,10 @@ function CalendarView({
               const hasValidImage =
                 trade.image &&
                 (trade.image.startsWith('data:image') || /^[A-Za-z0-9+/=]+$/.test(trade.image));
+              const imageSrc =
+                trade.image && !trade.image.startsWith('data:image')
+                  ? `data:image/png;base64,${trade.image}`
+                  : trade.image;
 
               return (
                 <div
@@ -134,13 +150,10 @@ function CalendarView({
 
                     {hasValidImage ? (
                       <img
-                        src={
-                          trade.image.startsWith('data:image')
-                            ? trade.image
-                            : `data:image/png;base64,${trade.image}`
-                        }
+                        src={imageSrc}
                         alt="Trade screenshot"
-                        className="w-16 h-16 object-cover rounded mt-2"
+                        className="w-16 h-16 object-cover rounded mt-2 cursor-pointer"
+                        onClick={() => openImageViewer(imageSrc)}
                       />
                     ) : (
                       <div className="w-16 h-16 bg-gray-600 flex items-center justify-center rounded mt-2 text-white text-xs">
@@ -157,6 +170,28 @@ function CalendarView({
 
       {d && dayTrades.length === 0 && (
         <p className="mt-6 text-gray-400">No trades for {d}.</p>
+      )}
+
+      {/* Image Viewer */}
+      {selectedImage && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
+          onClick={closeImageViewer}
+        >
+          <div className="relative">
+            <img
+              src={selectedImage}
+              alt="Full-size trade screenshot"
+              className="max-h-[90vh] max-w-[90vw] object-contain"
+            />
+            <button
+              className="absolute top-2 right-2 text-white text-2xl close"
+              onClick={closeImageViewer}
+            >
+              ×
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
