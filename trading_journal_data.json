@@ -5,25 +5,43 @@
         "2025-06-01": [
           {
             "date": "2025-06-01",
-            "image": null,
-            "imageRef": false,
-            "market": "",
+            "market": "NASDAQ",
             "profitLossDollar": 123,
+            "tags": [],
             "stars": 0,
             "strategy": "",
-            "tags": [],
-            "tradeDuration": 123
+            "tradeDuration": 123,
+            "imageRef": null
           },
           {
             "date": "2025-06-01",
-            "image": null,
-            "imageRef": false,
-            "market": "",
+            "market": "NASDAQ",
             "profitLossDollar": 234,
+            "tags": [],
             "stars": 0,
             "strategy": "",
+            "tradeDuration": 234,
+            "imageRef": null
+          },
+          {
+            "date": "2025-06-01",
+            "market": "NASDAQ",
+            "profitLossDollar": 56,
             "tags": [],
-            "tradeDuration": 234
+            "stars": 1,
+            "strategy": "",
+            "tradeDuration": 23,
+            "imageRef": null
+          },
+          {
+            "date": "2025-06-01",
+            "market": "SP500",
+            "profitLossDollar": 234,
+            "tags": [],
+            "stars": 0,
+            "strategy": "",
+            "tradeDuration": 234,
+            "imageRef": null
           }
         ]
       },
