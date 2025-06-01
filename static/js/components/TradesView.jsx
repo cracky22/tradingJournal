@@ -31,26 +31,33 @@ function TradesView({
   // Load trades for the selected date directly from props
   const dayTrades = t[d] || [];
 
-  // Fetch images for trades
+  // Fetch images for trades only if they haven't been loaded yet
   useEffect(() => {
     const loadImages = async () => {
       const newImages = {};
+      let hasNewImages = false;
       for (let i = 0; i < dayTrades.length; i++) {
         const trade = dayTrades[i];
         if (trade.imageRef) {
           const key = `${d}-${i}`;
           if (!images[key]) {
-            const image = await fi(cp, d, i);
-            newImages[key] = image;
+            try {
+              const image = await fi(cp, d, i);
+              newImages[key] = image;
+              hasNewImages = true;
+            } catch (error) {
+              console.error(`Error fetching image for ${key}:`, error);
+              newImages[key] = null; // Mark as failed to avoid retrying
+            }
           }
         }
       }
-      if (Object.keys(newImages).length > 0) {
+      if (hasNewImages) {
         setImages((prev) => ({ ...prev, ...newImages }));
       }
     };
     loadImages();
-  }, [dayTrades, cp, fi, d, images]);
+  }, [dayTrades, cp, fi, d]); // Removed 'images' from dependencies to prevent loop
 
   // Populate form for editing
   useEffect(() => {
@@ -406,7 +413,7 @@ function TradesView({
                       {trade.imageRef ? (
                         images[imageKey] ? (
                           <img
-                            src={`data:image/png;base64,${images[imageKey]}`}
+                            src={images[imageKey]}
                             alt="Trade screenshot"
                             className="w-16 h-16 object-cover rounded"
                           />

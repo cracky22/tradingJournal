@@ -32,7 +32,6 @@ function App() {
 
   // Load data from sessionStorage or server
   const loadFromSessionStorage = () => {
-    // Remove sessionStorage data to force fetching from server on page load
     sessionStorage.removeItem("tradingJournalData");
     return false; // Always return false to trigger fetchAllData
   };
@@ -120,29 +119,14 @@ function App() {
     }
   };
 
-  // Load profiles function for ProfilesView (if needed in the future)
-  const loadProfiles = async () => {
-    try {
-      const response = await fetch("/api/get_profiles", {
-        signal: AbortSignal.timeout(10000),
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      const { profiles: profilesList } = await response.json();
-      return profilesList.length > 0 ? profilesList : ["Profile 1"];
-    } catch (error) {
-      console.error("Error loading profiles:", error);
-      return ["Profile 1"];
-    }
-  };
-
+  // Initial data load
   useEffect(() => {
     if (!loadFromSessionStorage()) {
       fetchAllData();
     }
-  }, []);
+  }, []); // Empty dependency array ensures this runs only once on mount
 
+  // Parallax effect for background
   useEffect(() => {
     let lastScroll = 0;
     const throttle = (func, wait) => {
@@ -167,7 +151,7 @@ function App() {
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, []); // Empty dependency array ensures this runs only once on mount
 
   const handleSubmitData = async () => {
     setIsSubmitting(true);

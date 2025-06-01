@@ -13,6 +13,7 @@ from flask_cors import CORS
 from waitress import serve
 import threading
 from os import environ
+
 DATA_FILE = environ.get('TRADING_JOURNAL_DATA_FILE', 'trading_journal_data.json')
 HOST = environ.get('TRADING_JOURNAL_HOST', 'localhost')
 PORT = int(environ.get('TRADING_JOURNAL_PORT', 2108))
@@ -43,47 +44,35 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
-def format_file_size(size_bytes):
-    for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
-        if size_bytes < 1024:
-            return f"{size_bytes:.1f} {unit}"
-        size_bytes /= 1024
-    return f"{size_bytes:.1f} PB"
+# In-memory cache for the data
+cached_data = None
+last_modified_time = 0
 
-def validate_data(data):
-    if not isinstance(data, dict):
-        return False, "Data must be a dictionary"
-    if 'currentProfile' not in data:
-        return False, "Missing currentProfile"
-    if not isinstance(data.get('trades', {}), dict):
-        return False, "Trades must be a dictionary"
-    if not isinstance(data.get('tags', []), list):
-        return False, "Tags must be a list"
-    if not isinstance(data.get('strategies', []), list):
-        return False, "Strategies must be a list"
-    if not isinstance(data.get('profiles', []), list):
-        return False, "Profiles must be a list"
-    return True, ""
-
-def init_data_file():
-    if not os.path.exists(DATA_FILE):
-        with open(DATA_FILE, 'w') as f:
-            json.dump({'profiles': {}, 'currentProfile': 'Profile 1'}, f)
-        logger.info(f"Initialized new data file: {DATA_FILE}")
-
-def load_data():
+def load_data_from_file():
     try:
         with open(DATA_FILE, 'r') as f:
-            data = json.load(f)
-            data_size = os.path.getsize(DATA_FILE)
-            logger.info(f"Loaded data from {DATA_FILE}, size: {format_file_size(data_size)}")
-            return data
+            return json.load(f)
     except Exception as e:
         logger.error(f"Error loading data: {str(e)}")
         init_data_file()
         return {'profiles': {}, 'currentProfile': 'Profile 1'}
 
+def load_data():
+    global cached_data, last_modified_time
+    try:
+        # Check if the file has been modified since last load
+        current_mtime = os.path.getmtime(DATA_FILE)
+        if cached_data is None or current_mtime > last_modified_time:
+            cached_data = load_data_from_file()
+            last_modified_time = current_mtime
+    except FileNotFoundError:
+        init_data_file()
+        cached_data = {'profiles': {}, 'currentProfile': 'Profile 1'}
+        last_modified_time = os.path.getmtime(DATA_FILE)
+    return cached_data
+
 def save_data(data):
+    global cached_data, last_modified_time
     try:
         backup_file = f"{DATA_FILE}.backup"
         if os.path.exists(DATA_FILE):
@@ -92,18 +81,26 @@ def save_data(data):
         
         with open(DATA_FILE, 'w') as f:
             json.dump(data, f, indent=2)
-        data_size = os.path.getsize(DATA_FILE)
-        logger.info(f"Saved data to {DATA_FILE}, size: {format_file_size(data_size)}")
         
         if os.path.exists(backup_file):
             os.remove(backup_file)
             logger.info(f"Removed backup: {backup_file}")
+        
+        # Update the cache after saving
+        cached_data = data
+        last_modified_time = os.path.getmtime(DATA_FILE)
     except Exception as e:
         logger.error(f"Error saving data: {str(e)}")
         if os.path.exists(backup_file):
             shutil.move(backup_file, DATA_FILE)
             logger.info(f"Restored backup: {backup_file}")
         raise
+
+def init_data_file():
+    if not os.path.exists(DATA_FILE):
+        with open(DATA_FILE, 'w') as f:
+            json.dump({'profiles': {}, 'currentProfile': 'Profile 1'}, f)
+        logger.info(f"Initialized new data file: {DATA_FILE}")
 
 @app.route('/', methods=['GET'])
 def serve_index():
@@ -257,6 +254,21 @@ def submit_data():
         logger.error(f"Error submitting data: {str(e)}")
         return jsonify({'error': 'Failed to save data'}), 500
 
+def validate_data(data):
+    if not isinstance(data, dict):
+        return False, "Data must be a dictionary"
+    if 'currentProfile' not in data:
+        return False, "Missing currentProfile"
+    if not isinstance(data.get('trades', {}), dict):
+        return False, "Trades must be a dictionary"
+    if not isinstance(data.get('tags', []), list):
+        return False, "Tags must be a list"
+    if not isinstance(data.get('strategies', []), list):
+        return False, "Strategies must be a list"
+    if not isinstance(data.get('profiles', []), list):
+        return False, "Profiles must be a list"
+    return True, ""
+
 def signal_handler(sig, frame):
     logger.info("Shutting down server...")
     sys.exit(0)
@@ -269,4 +281,6 @@ if __name__ == '__main__':
     signal.signal(signal.SIGINT, signal_handler)
     threading.Thread(target=open_browser, daemon=True).start()
     logger.info(f"Starting server on http://{HOST}:{PORT}")
+    # Initialize the cache on startup
+    load_data()
     serve(app, host=HOST, port=PORT)
