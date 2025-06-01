@@ -162,3 +162,46 @@
 2025-06-01 13:10:58,252 [INFO] Starting server on http://localhost:2108
 2025-06-01 13:10:59,466 [ERROR] index.html not found at static\index.html
 2025-06-01 13:11:36,820 [INFO] Shutting down server...
+2025-06-01 13:11:39,179 [INFO] Starting server on http://localhost:2108
+2025-06-01 13:11:41,251 [INFO] Loaded data from trading_journal_data.json, size: 4.1 KB
+2025-06-01 13:11:41,273 [INFO] Loaded data from trading_journal_data.json, size: 4.1 KB
+2025-06-01 13:11:41,309 [INFO] Loaded data from trading_journal_data.json, size: 4.1 KB
+2025-06-01 13:11:41,435 [INFO] Loaded data from trading_journal_data.json, size: 4.1 KB
+2025-06-01 13:11:48,816 [INFO] Loaded data from trading_journal_data.json, size: 4.1 KB
+2025-06-01 13:11:48,883 [INFO] Loaded data from trading_journal_data.json, size: 4.1 KB
+2025-06-01 13:11:48,891 [INFO] Loaded data from trading_journal_data.json, size: 4.1 KB
+2025-06-01 13:11:48,898 [INFO] Loaded data from trading_journal_data.json, size: 4.1 KB
+2025-06-01 13:12:12,971 [INFO] Loaded data from trading_journal_data.json, size: 4.1 KB
+2025-06-01 13:12:12,974 [INFO] Created backup: trading_journal_data.json.backup
+2025-06-01 13:12:12,975 [INFO] Saved data to trading_journal_data.json, size: 1.6 KB
+2025-06-01 13:12:12,976 [INFO] Removed backup: trading_journal_data.json.backup
+2025-06-01 13:12:40,577 [INFO] Loaded data from trading_journal_data.json, size: 1.6 KB
+2025-06-01 13:12:40,580 [INFO] Created backup: trading_journal_data.json.backup
+2025-06-01 13:12:40,582 [INFO] Saved data to trading_journal_data.json, size: 1.2 KB
+2025-06-01 13:12:40,583 [INFO] Removed backup: trading_journal_data.json.backup
+2025-06-01 13:13:30,982 [INFO] Loaded data from trading_journal_data.json, size: 1.2 KB
+2025-06-01 13:13:30,993 [INFO] Loaded data from trading_journal_data.json, size: 1.2 KB
+2025-06-01 13:13:31,013 [INFO] Loaded data from trading_journal_data.json, size: 1.2 KB
+2025-06-01 13:13:31,017 [INFO] Loaded data from trading_journal_data.json, size: 1.2 KB
+2025-06-01 13:18:11,652 [INFO] Shutting down server...
+2025-06-01 13:18:13,369 [INFO] Starting server on http://localhost:2108
+2025-06-01 13:18:15,748 [INFO] Loaded data from trading_journal_data.json, size: 1.2 KB
+2025-06-01 13:18:15,776 [INFO] Loaded data from trading_journal_data.json, size: 1.2 KB
+2025-06-01 13:18:15,805 [INFO] Loaded data from trading_journal_data.json, size: 1.2 KB
+2025-06-01 13:18:15,827 [INFO] Loaded data from trading_journal_data.json, size: 1.2 KB
+2025-06-01 13:18:25,738 [INFO] Loaded data from trading_journal_data.json, size: 1.2 KB
+2025-06-01 13:18:25,766 [INFO] Created backup: trading_journal_data.json.backup
+2025-06-01 13:18:25,767 [INFO] Saved data to trading_journal_data.json, size: 1.2 KB
+2025-06-01 13:18:25,768 [INFO] Removed backup: trading_journal_data.json.backup
+2025-06-01 13:18:34,962 [INFO] Loaded data from trading_journal_data.json, size: 1.2 KB
+2025-06-01 13:18:34,984 [INFO] Loaded data from trading_journal_data.json, size: 1.2 KB
+2025-06-01 13:18:34,988 [INFO] Loaded data from trading_journal_data.json, size: 1.2 KB
+2025-06-01 13:18:34,991 [INFO] Loaded data from trading_journal_data.json, size: 1.2 KB
+2025-06-01 13:18:36,482 [INFO] Loaded data from trading_journal_data.json, size: 1.2 KB
+2025-06-01 13:18:36,490 [INFO] Loaded data from trading_journal_data.json, size: 1.2 KB
+2025-06-01 13:18:36,496 [INFO] Loaded data from trading_journal_data.json, size: 1.2 KB
+2025-06-01 13:18:36,499 [INFO] Loaded data from trading_journal_data.json, size: 1.2 KB
+2025-06-01 13:19:52,601 [INFO] Loaded data from trading_journal_data.json, size: 1.2 KB
+2025-06-01 13:19:52,619 [INFO] Created backup: trading_journal_data.json.backup
+2025-06-01 13:19:52,628 [INFO] Saved data to trading_journal_data.json, size: 2.1 KB
+2025-06-01 13:19:52,629 [INFO] Removed backup: trading_journal_data.json.backup

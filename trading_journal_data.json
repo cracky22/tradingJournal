@@ -1,7 +1,44 @@
 {
   "profiles": {
     "Profile 1": {
-      "trades": {},
+      "trades": {
+        "2025-06-01": [
+          {
+            "date": "2025-06-01",
+            "image": null,
+            "imageRef": false,
+            "market": "NASDAQ",
+            "profitLossDollar": 123,
+            "reason": "",
+            "riskReward": 123,
+            "stars": 0,
+            "strategies": [
+              "Trendfolge"
+            ],
+            "strategy": "Trendfolge",
+            "tags": [],
+            "tradeDuration": 123,
+            "tradeType": "Long"
+          },
+          {
+            "date": "2025-06-01",
+            "image": null,
+            "imageRef": false,
+            "market": "NASDAQ",
+            "profitLossDollar": 234,
+            "reason": "",
+            "riskReward": 234,
+            "stars": 0,
+            "strategies": [
+              "Trendfolge"
+            ],
+            "strategy": "Trendfolge",
+            "tags": [],
+            "tradeDuration": 234,
+            "tradeType": "Long"
+          }
+        ]
+      },
       "tags": [],
       "strategies": [
         "Trendfolge",
@@ -17,19 +54,20 @@
         "2025-06-01": [
           {
             "date": "2025-06-01",
+            "image": null,
+            "imageRef": false,
             "market": "NASDAQ",
-            "tradeType": "Long",
+            "profitLossDollar": 123,
+            "reason": "",
             "riskReward": 123,
-            "strategy": "Trendfolge",
+            "stars": 0,
             "strategies": [
               "Trendfolge"
             ],
-            "profitLossDollar": 123,
+            "strategy": "Trendfolge",
+            "tags": [],
             "tradeDuration": 123,
-            "reason": "",
-            "stars": 0,
-            "image": null,
-            "tags": []
+            "tradeType": "Long"
           }
         ]
       },
@@ -56,5 +94,5 @@
       ]
     }
   },
-  "currentProfile": "Profile 2"
+  "currentProfile": "Profile 1"
 }
