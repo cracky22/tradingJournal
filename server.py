@@ -116,211 +116,118 @@ def save_data(data):
     except Exception as e:
         logger.error(f"Error saving data: {str(e)}")
         if os.path.exists(backup_file):
-            shutil.copy2(backup_file, DATA_FILE)
-            logger.info(f"Restored data from backup: {backup_file}")
+            shutil.move(backup_file, DATA_FILE)
+            logger.info(f"Restored backup: {backup_file}")
         raise
-
-@app.route('/')
-def serve_index():
-    try:
-        if not os.path.exists('index.html'):
-            logger.error("index.html file not found")
-            return jsonify({'error': 'index.html not found'}), 404
-        file_size = os.path.getsize('index.html')
-        logger.info(f"Serving index.html, size: {format_file_size(file_size)}")
-        return send_file('index.html')
-    except Exception as e:
-        logger.error(f"Error serving index.html: {str(e)}")
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/submit_data', methods=['POST'])
-def submit_data():
-    client_ip = request.remote_addr
-    if not check_rate_limit(client_ip):
-        logger.warning(f"Rate limit exceeded for IP: {client_ip}")
-        return jsonify({'error': 'Rate limit exceeded'}), 429
-    
-    try:
-        content_length = request.content_length or 0
-        logger.info(f"Received POST request to /api/submit_data from {client_ip}, size: {format_file_size(content_length)}")
-        
-        data = request.get_json()
-        is_valid, error_msg = validate_data(data)
-        if not is_valid:
-            logger.warning(f"Invalid data: {error_msg}")
-            return jsonify({'error': error_msg}), 400
-        
-        profile_name = data.get('currentProfile')
-        stored_data = load_data()
-        
-        stored_data['profiles'][profile_name] = {
-            'trades': data.get('trades', {}),
-            'tags': data.get('tags', []),
-            'strategies': data.get('strategies', []),
-            'profilesList': data.get('profiles', [])
-        }
-        stored_data['currentProfile'] = profile_name
-        
-        save_data(stored_data)
-        
-        response = {'message': 'Data saved successfully'}
-        response_size = len(json.dumps(response).encode('utf-8'))
-        logger.info(f"Sending response for /api/submit_data, size: {format_file_size(response_size)}")
-        return jsonify(response), 200
-    except Exception as e:
-        logger.error(f"Error processing POST request: {str(e)}")
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/get_data/<profile_name>', methods=['GET'])
-def get_data(profile_name):
-    client_ip = request.remote_addr
-    if not check_rate_limit(client_ip):
-        logger.warning(f"Rate limit exceeded for IP: {client_ip}")
-        return jsonify({'error': 'Rate limit exceeded'}), 429
-    
-    try:
-        logger.info(f"Received GET request for profile: {profile_name} from {client_ip}")
-        data = load_data()
-        profile_data = data['profiles'].get(profile_name, {
-            'trades': {},
-            'tags': [],
-            'strategies': ['Trendfolge', 'Volumen', 'Fibonacci', 'Sweep', 'Range', 'RAIN'],
-            'profilesList': data.get('profiles', ['Profile 1'])
-        })
-        profile_data['currentProfile'] = profile_name
-        
-        response_size = len(json.dumps(profile_data).encode('utf-8'))
-        logger.info(f"Sending response for /api/get_data/{profile_name}, size: {format_file_size(response_size)}")
-        return jsonify(profile_data), 200
-    except Exception as e:
-        logger.error(f"Error processing GET request for profile {profile_name}: {str(e)}")
-        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/get_profiles', methods=['GET'])
 def get_profiles():
-    client_ip = request.remote_addr
-    if not check_rate_limit(client_ip):
-        logger.warning(f"Rate limit exceeded for IP: {client_ip}")
+    ip = request.remote_addr
+    if not check_rate_limit(ip):
         return jsonify({'error': 'Rate limit exceeded'}), 429
-    
     try:
-        logger.info(f"Received GET request for all profiles from {client_ip}")
         data = load_data()
-        profiles = list(data['profiles'].keys())
-        if not profiles:
-            profiles = ['Profile 1']  # Ensure at least one profile exists
-        response = {'profiles': profiles}
-        response_size = len(json.dumps(response).encode('utf-8'))
-        logger.info(f"Sending response for /api/get_profiles, size: {format_file_size(response_size)}")
-        return jsonify(response), 200
+        profiles = list(data.get('profiles', {}).keys()) or ['Profile 1']
+        return jsonify({'profiles': profiles})
     except Exception as e:
-        logger.error(f"Error processing GET request for profiles: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+        logger.error(f"Error fetching profiles: {str(e)}")
+        return jsonify({'error': 'Failed to fetch profiles'}), 500
 
-@app.route('/api/docs', methods=['GET'])
-def api_docs():
+@app.route('/api/get_data/<profile_name>', methods=['GET'])
+def get_data(profile_name):
+    ip = request.remote_addr
+    if not check_rate_limit(ip):
+        return jsonify({'error': 'Rate limit exceeded'}), 429
     try:
-        docs = {
-            'endpoints': [
-                {
-                    'path': '/',
-                    'method': 'GET',
-                    'description': 'Serves the index.html file',
-                    'response': 'HTML file'
-                },
-                {
-                    'path': '/api/submit_data',
-                    'method': 'POST',
-                    'description': 'Submits trading journal data for a profile',
-                    'body': {
-                        'currentProfile': 'string (required)',
-                        'trades': 'object',
-                        'tags': 'array',
-                        'strategies': 'array',
-                        'profiles': 'array'
-                    },
-                    'response': {'message': 'string'},
-                    'errors': {
-                        '400': 'Invalid data format or missing currentProfile',
-                        '429': 'Rate limit exceeded',
-                        '500': 'Server error'
-                    }
-                },
-                {
-                    'path': '/api/get_data/<profile_name>',
-                    'method': 'GET',
-                    'description': 'Retrieves trading journal data for the specified profile',
-                    'response': {
-                        'trades': 'object',
-                        'tags': 'array',
-                        'strategies': 'array',
-                        'profilesList': 'array',
-                        'currentProfile': 'string'
-                    },
-                    'errors': {
-                        '429': 'Rate limit exceeded',
-                        '500': 'Server error'
-                    }
-                },
-                {
-                    'path': '/api/get_profiles',
-                    'method': 'GET',
-                    'description': 'Retrieves a list of all profile names',
-                    'response': {
-                        'profiles': 'array of strings'
-                    },
-                    'errors': {
-                        '429': 'Rate limit exceeded',
-                        '500': 'Server error'
-                    }
-                },
-                {
-                    'path': '/api/docs',
-                    'method': 'GET',
-                    'description': 'Returns this API documentation',
-                    'response': 'JSON object describing all endpoints'
-                }
+        data = load_data()
+        profile_data = data.get('profiles', {}).get(profile_name, {})
+        
+        # Prepare response excluding images but including image references
+        trades = profile_data.get('trades', {})
+        modified_trades = {}
+        for date, trade_list in trades.items():
+            modified_trades[date] = [
+                {**trade, 'image': None, 'imageRef': trade.get('image') is not None}
+                for trade in trade_list
             ]
+        
+        response = {
+            'trades': modified_trades,
+            'tags': profile_data.get('tags', []),
+            'strategies': profile_data.get('strategies', [])
         }
-        response_size = len(json.dumps(docs).encode('utf-8'))
-        logger.info(f"Sending API documentation, size: {format_file_size(response_size)}")
-        return jsonify(docs), 200
+        return jsonify(response)
     except Exception as e:
-        logger.error(f"Error serving API docs: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+        logger.error(f"Error fetching data for profile {profile_name}: {str(e)}")
+        return jsonify({'error': 'Failed to fetch data'}), 500
 
-server_thread = None
-stop_event = threading.Event()
+@app.route('/api/get_image/<profile_name>/<date>/<index>', methods=['GET'])
+def get_image(profile_name, date, index):
+    ip = request.remote_addr
+    if not check_rate_limit(ip):
+        return jsonify({'error': 'Rate limit exceeded'}), 429
+    try:
+        data = load_data()
+        profile_data = data.get('profiles', {}).get(profile_name, {})
+        trades = profile_data.get('trades', {}).get(date, [])
+        index = int(index)
+        
+        if index < 0 or index >= len(trades):
+            return jsonify({'error': 'Invalid trade index'}), 404
+        
+        trade = trades[index]
+        image = trade.get('image')
+        if not image:
+            return jsonify({'error': 'No image for this trade'}), 404
+        
+        return jsonify({'image': image})
+    except Exception as e:
+        logger.error(f"Error fetching image for profile {profile_name}, date {date}, index {index}: {str(e)}")
+        return jsonify({'error': 'Failed to fetch image'}), 500
+
+@app.route('/api/submit_data', methods=['POST'])
+def submit_data():
+    ip = request.remote_addr
+    if not check_rate_limit(ip):
+        return jsonify({'error': 'Rate limit exceeded'}), 429
+    try:
+        data = request.get_json()
+        valid, error = validate_data(data)
+        if not valid:
+            logger.error(f"Invalid data: {error}")
+            return jsonify({'error': error}), 400
+        
+        current_data = load_data()
+        profiles = data.get('profiles', ['Profile 1'])
+        current_profile = data.get('currentProfile', 'Profile 1')
+        
+        # Update profiles data
+        current_data['profiles'] = current_data.get('profiles', {})
+        for profile in profiles:
+            current_data['profiles'][profile] = {
+                'trades': data.get('trades', {}).get(profile, {}),
+                'tags': data.get('tags', []),
+                'strategies': data.get('strategies', [])
+            }
+        
+        current_data['currentProfile'] = current_profile
+        
+        save_data(current_data)
+        return jsonify({'message': 'Data saved successfully'})
+    except Exception as e:
+        logger.error(f"Error submitting data: {str(e)}")
+        return jsonify({'error': 'Failed to save data'}), 500
 
 def signal_handler(sig, frame):
-    logger.info("Received shutdown signal, stopping server...")
-    stop_event.set()
-    if server_thread:
-        server_thread.join(timeout=5.0)
-    logger.info("Server stopped gracefully")
+    logger.info("Shutting down server...")
     sys.exit(0)
 
+def open_browser():
+    time.sleep(1)  # Wait for server to start
+    webbrowser.open(f"http://{HOST}:{PORT}")
+
 if __name__ == '__main__':
-    init_data_file()
-    url = f'http://{HOST}:{PORT}'
-    logger.info(f"Starting server with {os.cpu_count() or 1} threads")
-    logger.info(f"Opening browser at {url}")
-    webbrowser.open(url)
-    
     signal.signal(signal.SIGINT, signal_handler)
-    signal.signal(signal.SIGTERM, signal_handler)
-    
-    server_thread = threading.Thread(target=serve, args=(app,), kwargs={
-        'host': HOST,
-        'port': PORT,
-        'threads': os.cpu_count() or 1,
-        'backlog': 2048,
-        'ident': 'Waitress-Flask-Server'
-    })
-    server_thread.start()
-    
-    try:
-        while not stop_event.is_set():
-            time.sleep(1)
-    except KeyboardInterrupt:
-        signal_handler(signal.SIGINT, None)
+    threading.Thread(target=open_browser, daemon=True).start()
+    logger.info(f"Starting server on http://{HOST}:{PORT}")
+    serve(app, host=HOST, port=PORT)

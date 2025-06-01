@@ -112,34 +112,115 @@
       const [isSubmitting, setIsSubmitting] = useState(false);
       const [isLoading, setIsLoading] = useState(true);
 
-      const fetchProfiles = async () => {
-        setIsLoading(true);
+      // Function to fetch image for a specific trade
+      const fetchImage = async (profile, date, index) => {
         try {
-          const response = await fetch('/api/get_profiles', {
-            signal: AbortSignal.timeout(10000),
+          const response = await fetch(`/api/get_image/${encodeURIComponent(profile)}/${encodeURIComponent(date)}/${index}`, {
+            signal: AbortSignal.timeout(5000),
           });
           if (!response.ok) {
             const data = await response.json().catch(() => ({}));
             throw new Error(data.error || `HTTP error! Status: ${response.status}`);
           }
           const data = await response.json();
-          const profilesList = Array.isArray(data.profiles) && data.profiles.length > 0 ? data.profiles : ['Profile 1'];
-          setProfiles(profilesList);
-          setCurrentProfile(profilesList[0] || 'Profile 1');
-          await loadProfileData(profilesList[0] || 'Profile 1');
+          return data.image || null;
         } catch (error) {
-          console.error('Error fetching profiles:', error);
-          alert(`Failed to fetch profiles: ${error.message || 'Network error'}`);
+          console.error('Error fetching image:', error);
+          return null;
+        }
+      };
+
+      // Load data from sessionStorage or server
+      const loadFromSessionStorage = () => {
+        const storedData = sessionStorage.getItem('tradingJournalData');
+        if (storedData) {
+          try {
+            const parsed = JSON.parse(storedData);
+            setProfiles(parsed.profiles || ['Profile 1']);
+            setCurrentProfile(parsed.currentProfile || 'Profile 1');
+            setTrades(parsed.trades || {});
+            setTagsState(parsed.tags || []);
+            setStrategies(parsed.strategies || ['Trendfolge', 'Volumen', 'Fibonacci', 'Sweep', 'Range', 'RAIN']);
+            return true;
+          } catch (e) {
+            console.error('Error parsing sessionStorage data:', e);
+            sessionStorage.removeItem('tradingJournalData');
+            return false;
+          }
+        }
+        return false;
+      };
+
+      // Save data to sessionStorage
+      const saveToSessionStorage = (data) => {
+        try {
+          sessionStorage.setItem('tradingJournalData', JSON.stringify({
+            profiles: data.profiles,
+            currentProfile: data.currentProfile,
+            trades: data.trades,
+            tags: data.tags,
+            strategies: data.strategies,
+          }));
+        } catch (e) {
+          console.error('Error saving to sessionStorage:', e);
+        }
+      };
+
+      // Fetch all profiles and their data
+      const fetchAllData = async () => {
+        setIsLoading(true);
+        try {
+          // Fetch list of profiles
+          const profilesResponse = await fetch('/api/get_profiles', {
+            signal: AbortSignal.timeout(10000),
+          });
+          if (!profilesResponse.ok) {
+            const data = await profilesResponse.json().catch(() => ({}));
+            throw new Error(data.error || `HTTP error! Status: ${profilesResponse.status}`);
+          }
+          const { profiles: profilesList } = await profilesResponse.json();
+          const profilesData = profilesList.length > 0 ? profilesList : ['Profile 1'];
+          setProfiles(profilesData);
+          setCurrentProfile(profilesData[0] || 'Profile 1');
+
+          // Fetch data for each profile
+          const allData = { profiles: profilesData, currentProfile: profilesData[0] || 'Profile 1', trades: {}, tags: [], strategies: [] };
+          for (const profile of profilesData) {
+            const response = await fetch(`/api/get_data/${encodeURIComponent(profile)}`, {
+              signal: AbortSignal.timeout(10000),
+            });
+            if (!response.ok) {
+              const data = await response.json().catch(() => ({}));
+              throw new Error(data.error || `HTTP error! Status: ${response.status}`);
+            }
+            const data = await response.json();
+            allData.trades[profile] = data.trades || {};
+            allData.tags = [...new Set([...allData.tags, ...(data.tags || [])])];
+            allData.strategies = [...new Set([...allData.strategies, ...(data.strategies || [])])];
+          }
+
+          // Store in sessionStorage
+          saveToSessionStorage(allData);
+          setTrades(allData.trades[allData.currentProfile] || {});
+          setTagsState(allData.tags);
+          setStrategies(allData.strategies);
+        } catch (error) {
+          console.error('Error fetching all data:', error);
+          alert(`Failed to fetch data: ${error.message || 'Network error'}`);
           setProfiles(['Profile 1']);
           setCurrentProfile('Profile 1');
-          await loadProfileData('Profile 1');
+          setTrades({});
+          setTagsState([]);
+          setStrategies(['Trendfolge', 'Volumen', 'Fibonacci', 'Sweep', 'Range', 'RAIN']);
         } finally {
           setIsLoading(false);
         }
       };
 
       useEffect(() => {
-        fetchProfiles();
+        if (!loadFromSessionStorage()) {
+          fetchAllData();
+        }
       }, []);
 
       useEffect(() => {
@@ -168,36 +249,6 @@
         return () => window.removeEventListener('scroll', handleScroll);
       }, []);
 
-      const loadProfileData = async (profile) => {
-        setIsLoading(true);
-        try {
-          const response = await fetch(`/api/get_data/${encodeURIComponent(profile)}`, {
-            signal: AbortSignal.timeout(10000),
-          });
-          if (!response.ok) {
-            const data = await response.json().catch(() => ({}));
-            throw new Error(data.error || `HTTP error! Status: ${response.status}`);
-          }
-          const data = await response.json();
-          const profilesList = Array.isArray(data.profilesList) ? data.profilesList : profiles;
-          setProfiles(profilesList.length > 0 ? profilesList : ['Profile 1']);
-          setTrades(data.trades || {});
-          setTagsState(Array.isArray(data.tags) ? data.tags : []);
-          setStrategies(Array.isArray(data.strategies) ? data.strategies : ['Trendfolge', 'Volumen', 'Fibonacci', 'Sweep', 'Range', 'RAIN']);
-          setCurrentProfile(data.currentProfile || profile);
-        } catch (error) {
-          console.error('Error loading data:', error);
-          alert(`Failed to load profile data: ${error.message || 'Network error'}`);
-          setProfiles(['Profile 1']);
-          setTrades({});
-          setTagsState([]);
-          setStrategies(['Trendfolge', 'Volumen', 'Fibonacci', 'Sweep', 'Range', 'RAIN']);
-          setCurrentProfile(profile);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-
       const handleSubmitData = async () => {
         setIsSubmitting(true);
         try {
@@ -206,7 +257,7 @@
             currentProfile: currentProfile,
             trades: trades,
             tags: tagsState,
-            strategies: strategies
+            strategies: strategies,
           };
           const response = await fetch('/api/submit_data', {
             method: 'POST',
@@ -220,6 +271,7 @@
           if (!response.ok) {
             throw new Error(result.error || 'Failed to submit data');
           }
+          saveToSessionStorage(data);
           alert('Data submitted successfully');
         } catch (error) {
           alert(`Failed to submit data: ${error.message || 'Network error'}`);
@@ -232,11 +284,16 @@
         if (!profile || !profiles.includes(profile)) {
           console.warn('Invalid profile selection, resetting to default');
           setCurrentProfile(profiles[0] || 'Profile 1');
-          await loadProfileData(profiles[0] || 'Profile 1');
+          setTrades({});
+          setTagsState([]);
+          setStrategies(['Trendfolge', 'Volumen', 'Fibonacci', 'Sweep', 'Range', 'RAIN']);
+          setView('dashboard');
+          setOvDate(null);
+          setShowProfileManager(false);
           return;
         }
         setCurrentProfile(profile);
-        await loadProfileData(profile);
+        setTrades(trades[profile] || {});
         setView('dashboard');
         setOvDate(null);
         setShowProfileManager(false);
@@ -246,8 +303,12 @@
         const name = newProfileName.trim();
         if (!name || name === currentProfile || profiles.includes(name)) return;
         const updatedProfiles = profiles.map(p => p === currentProfile ? name : p);
+        const updatedTrades = { ...trades };
+        updatedTrades[name] = updatedTrades[currentProfile];
+        delete updatedTrades[currentProfile];
         setProfiles(updatedProfiles);
         setCurrentProfile(name);
+        setTrades(updatedTrades);
         setShowProfileManager(false);
         await handleSubmitData();
       };
@@ -258,9 +319,7 @@
         const updatedProfiles = [...profiles, name];
         setProfiles(updatedProfiles);
         setCurrentProfile(name);
-        setTrades({});
-        setTagsState([]);
-        setStrategies(['Trendfolge', 'Volumen', 'Fibonacci', 'Sweep', 'Range', 'RAIN']);
+        setTrades({ ...trades, [name]: {} });
         setShowProfileManager(false);
         await handleSubmitData();
       };
@@ -269,37 +328,48 @@
         if (profiles.length <= 1) return;
         if (!window.confirm(`Are you sure you want to delete the profile "${currentProfile}"?`)) return;
         const updatedProfiles = profiles.filter(p => p !== currentProfile);
-        const newCurrentProfile = updatedProfiles[0] || 'Profile 1';
+        const updatedTrades = { ...trades };
+        delete updatedTrades[currentProfile];
         setProfiles(updatedProfiles);
-        setCurrentProfile(newCurrentProfile);
-        await loadProfileData(newCurrentProfile);
+        setCurrentProfile(updatedProfiles[0] || 'Profile 1');
+        setTrades(updatedTrades);
         setShowProfileManager(false);
         await handleSubmitData();
       };
 
-      const addTrade = (t) => setTrades((p) => ({ ...p, [t.date]: [...(p[t.date] || []), t] }));
-      const updTrade = (d, i, t) => setTrades((p) => ({ ...p, [d]: p[d].map((x, j) => (j === i ? t : x)) }));
+      const addTrade = (t) => setTrades((p) => ({ ...p, [currentProfile]: { ...(p[currentProfile] || {}), [t.date]: [...(p[currentProfile]?.[t.date] || []), t] } }));
+      const updTrade = (d, i, t) => setTrades((p) => {
+        const updated = { ...p };
+        updated[currentProfile][d] = updated[currentProfile][d].map((x, j) => (j === i ? t : x));
+        return updated;
+      });
       const delTrade = (d, i) => setTrades((p) => {
-        const n = { ...p };
-        n[d].splice(i, 1);
-        if (!n[d].length) delete n[d];
-        return n;
+        const updated = { ...p };
+        updated[currentProfile][d] = updated[currentProfile][d].filter((_, j) => j !== i);
+        if (!updated[currentProfile][d].length) delete updated[currentProfile][d];
+        return updated;
       });
       const addTag = (t) => !tagsState.includes(t) && setTagsState((p) => [...p, t]);
       const delTag = (t) => {
         setTagsState((p) => p.filter((x) => x !== t));
         setTrades((p) => {
-          const updatedTrades = {};
-          for (let [date, tradeList] of Object.entries(p))
-            updatedTrades[date] = tradeList.map((trade) => ({ ...trade, tags: trade.tags.filter((tag) => tag !== t) }));
-          return updatedTrades;
+          const updated = { ...p };
+          for (let profile in updated) {
+            for (let date in updated[profile]) {
+              updated[profile][date] = updated[profile][date].map((trade) => ({
+                ...trade,
+                tags: trade.tags.filter((tag) => tag !== t),
+              }));
+            }
+          }
+          return updated;
         });
       };
       const addStrategy = (s) => !strategies.includes(s) && setStrategies((p) => [...p, s]);
       const delStrategy = (s) => setStrategies((p) => p.filter((x) => x !== s));
-      const getProfit = (d) => (trades[d] || []).reduce((s, t) => s + (t.profitLossDollar || 0), 0) || 0;
+      const getProfit = (d) => (trades[currentProfile]?.[d] || []).reduce((s, t) => s + (t.profitLossDollar || 0), 0) || 0;
       const getFTrades = () => {
-        let f = Object.values(trades || {}).flat().filter((t) => t && typeof t === 'object');
+        let f = Object.values(trades[currentProfile] || {}).flat().filter((t) => t && typeof t === 'object');
         if (allTradesFMkt !== 'All') f = f.filter((t) => t.market === allTradesFMkt);
         if (allTradesFPrd !== 'All') {
           const n = new Date();
@@ -394,11 +464,11 @@
                     {isSubmitting ? 'Submitting...' : 'Submit Data'}
                   </button>
                   <button
-                    onClick={() => loadProfileData(currentProfile)}
+                    onClick={fetchAllData}
                     disabled={isLoading}
                     className={`w-full px-4 py-2 text-white rounded-lg mt-2 smooth-transition ${isLoading ? 'bg-gray-600 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-500'}`}
                   >
-                    {isLoading ? 'Loading...' : 'Get Data'}
+                    {isLoading ? 'Loading...' : 'Refresh Data'}
                   </button>
                 </div>
               )}
@@ -417,12 +487,12 @@
               ))}
             </div>
             <div className="flex-1 p-6 overflow-y-auto smooth-transition z-10">
-              {ovDate ? <DayOverview t={trades} d={ovDate} sd={setOvDate} gp={getProfit} gc={getCData} dt={delTrade} /> : (
+              {ovDate ? <DayOverview t={trades[currentProfile] || {}} d={ovDate} sd={setOvDate} gp={getProfit} gc={getCData} dt={delTrade} fi={fetchImage} cp={currentProfile} /> : (
                 <>
-                  {view === 'dashboard' && <DashboardView t={trades} gc={getCData} gp={getProfit} gf={getFTrades} gtp={getTimePerfData} />}
-                  {view === 'calendar' && <CalendarView t={trades} d={date} sd={setDate} gp={getProfit} m={month} y={year} sm={setMonth} sy={setYear} so={setOvDate} />}
-                  {view === 'trades' && <TradesView t={trades} at={addTrade} ut={updTrade} dt={delTrade} d={date} sd={setDate} tg={tagsState} ag={addTag} dg={delTag} st={strategies} edit={edit} setEdit={setEdit} />}
-                  {view === 'allTrades' && <AllTradesView t={trades} gf={getFTrades} fs={allTradesFStr} sfs={setAllTradesFStr} fm={allTradesFMkt} sfm={setAllTradesFMkt} ft={allTradesFTag} sft={setAllTradesFTag} fp={allTradesFPrd} sfp={setAllTradesFPrd} fst={allTradesFStart} sfst={setAllTradesFStart} fe={allTradesFEnd} sfe={setAllTradesFEnd} dt={delTrade} tg={tagsState} st={strategies} />}
+                  {view === 'dashboard' && <DashboardView t={trades[currentProfile] || {}} gc={getCData} gp={getProfit} gf={getFTrades} gtp={getTimePerfData} />}
+                  {view === 'calendar' && <CalendarView t={trades[currentProfile] || {}} d={date} sd={setDate} gp={getProfit} m={month} y={year} sm={setMonth} sy={setYear} so={setOvDate} />}
+                  {view === 'trades' && <TradesView t={trades[currentProfile] || {}} at={addTrade} ut={updTrade} dt={delTrade} d={date} sd={setDate} tg={tagsState} ag={addTag} dg={delTag} st={strategies} edit={edit} setEdit={setEdit} fi={fetchImage} cp={currentProfile} />}
+                  {view === 'allTrades' && <AllTradesView t={trades[currentProfile] || {}} gf={getFTrades} fs={allTradesFStr} sfs={setAllTradesFStr} fm={allTradesFMkt} sfm={setAllTradesFMkt} ft={allTradesFTag} sft={setAllTradesFTag} fp={allTradesFPrd} sfp={setAllTradesFPrd} fst={allTradesFStart} sfst={setAllTradesFStart} fe={allTradesFEnd} sfe={setAllTradesFEnd} dt={delTrade} tg={tagsState} st={strategies} fi={fetchImage} cp={currentProfile} />}
                   {view === 'strategies' && <StrategiesView strategies={strategies} addStrategy={addStrategy} delStrategy={delStrategy} />}
                 </>
               )}
@@ -486,7 +556,7 @@
       );
     }
 
-    function TradesView({ t, at, ut, dt, d, sd, tg, ag, dg, st, edit, setEdit }) {
+    function TradesView({ t, at, ut, dt, d, sd, tg, ag, dg, st, edit, setEdit, fi, cp }) {
       const [tradeType, setTradeType] = useState('Long');
       const [riskReward, setRiskReward] = useState('');
       const [strategy, setStrategy] = useState(st[0] || '');
@@ -757,47 +827,7 @@
             <div>
               <h3 className="text-xl font-semibold text-gray-300 mb-4">Trade List</h3>
               {(t[d] || []).map((x, i) => (
-                <div key={i} className="p-3.5 bg-gray-700 rounded-lg mb-2 smooth-transition">
-                  <p className="text-gray-200 text-base">
-                    <strong>{(x.profitLossDollar || 0).toFixed(2)} $</strong> ({x.market}, R:R {x.riskReward || 0})
-                  </p>
-                  <p className="text-sm text-gray-400">Type: {x.tradeType || 'Long'}</p>
-                  <p className="text-sm text-gray-400">Strategy: {x.strategy}</p>
-                  <p className="text-sm text-gray-400">Tags: {(x.tags || []).join(', ')}</p>
-                  <p className="text-sm text-gray-400">Duration: {x.tradeDuration || 0} min, Stars: {x.stars || 0}</p>
-                  {x.image && <img src={x.image} alt="Trade screenshot" className="mt-2 max-w-[250px] rounded-lg smooth-transition" />}
-                  <div className="mt-2 flex space-x-2">
-                    <button
-                      onClick={() => {
-                        setEdit({ ...x, index: i });
-                        setMarket(x.market || markets[0]);
-                        setTradeType(x.tradeType || 'Long');
-                        setRiskReward(x.riskReward || '');
-                        setStrategy(x.strategy || st[0] || '');
-                        setProfitLossDollar(x.profitLossDollar || '');
-                        setTradeDuration(x.tradeDuration || '');
-                        setReason(x.reason || '');
-                        setStars(x.stars || 0);
-                        setImage(x.image || null);
-                        setTags(x.tags || []);
-                        setNewTag('');
-                      }}
-                      className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-500 text-sm smooth-transition"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (window.confirm(`Are you sure you want to delete this trade?`)) {
-                          dt(d, i);
-                        }
-                      }}
-                      className="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-500 text-sm smooth-transition"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
+                <TradeItem key={i} x={x} i={i} d={d} cp={cp} fi={fi} ut={ut} dt={dt} setEdit={setEdit} st={st} markets={markets} />
               ))}
             </div>
             <div>
@@ -817,6 +847,61 @@
                 ))}
               </div>
             </div>
+          </div>
+        </div>
+      );
+    }
+
+    function TradeItem({ x, i, d, cp, fi, ut, dt, setEdit, st, markets }) {
+      const [image, setImage] = useState(x.image || null);
+      const [loading, setLoading] = useState(!x.image);
+
+      useEffect(() => {
+        if (!x.image && x.imageRef) {
+          setLoading(true);
+          fi(cp, d, i).then((img) => {
+            if (img) {
+              setImage(img);
+              ut(d, i, { ...x, image: img });
+            }
+            setLoading(false);
+          });
+        }
+      }, [x.image, x.imageRef, cp, d, i, fi, ut]);
+
+      return (
+        <div className="p-3.5 bg-gray-700 rounded-lg mb-2 smooth-transition">
+          <p className="text-gray-200 text-base">
+            <strong>{(x.profitLossDollar || 0).toFixed(2)} $</strong> ({x.market}, R:R {x.riskReward || 0})
+          </p>
+          <p className="text-sm text-gray-400">Type: {x.tradeType || 'Long'}</p>
+          <p className="text-sm text-gray-400">Strategy: {x.strategy}</p>
+          <p className="text-sm text-gray-400">Tags: {(x.tags || []).join(', ')}</p>
+          <p className="text-sm text-gray-400">Duration: {x.tradeDuration || 0} min, Stars: {x.stars || 0}</p>
+          {loading ? (
+            <p className="text-sm text-gray-400">Loading image...</p>
+          ) : (
+            image && <img src={image} alt="Trade screenshot" className="mt-2 max-w-[250px] rounded-lg smooth-transition" />
+          )}
+          <div className="mt-2 flex space-x-2">
+            <button
+              onClick={() => {
+                setEdit({ ...x, index: i });
+              }}
+              className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-500 text-sm smooth-transition"
+            >
+              Edit
+            </button>
+            <button
+              onClick={() => {
+                if (window.confirm(`Are you sure you want to delete this trade?`)) {
+                  dt(d, i);
+                }
+              }}
+              className="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-500 text-sm smooth-transition"
+            >
+              Delete
+            </button>
           </div>
         </div>
       );
@@ -875,7 +960,7 @@
       );
     }
 
-    function AllTradesView({ t, gf, fs, sfs, fm, sfm, ft, sft, fp, sfp, fst, sfst, fe, sfe, dt, tg, st }) {
+    function AllTradesView({ t, gf, fs, sfs, fm, sfm, ft, sft, fp, sfp, fst, sfst, fe, sfe, dt, tg, st, fi, cp }) {
       const trades = gf();
       return (
         <div className="bg-gray-800 rounded-lg p-6 smooth-transition">
@@ -947,29 +1032,7 @@
                 <p className="text-gray-400">No trades match the selected filters.</p>
               ) : (
                 trades.map((x, i) => (
-                  <div key={`${x.date}-${i}`} className="p-3.5 bg-gray-700 rounded-lg mb-2 smooth-transition">
-                    <p className="text-gray-200 text-base">
-                      <strong>{(x.profitLossDollar || 0).toFixed(2)} $</strong> ({x.market}, R:R {x.riskReward || 0})
-                    </p>
-                    <p className="text-sm text-gray-400">Date: {x.date}</p>
-                    <p className="text-sm text-gray-400">Type: {x.tradeType || 'Long'}</p>
-                    <p className="text-sm text-gray-400">Strategy: {x.strategy}</p>
-                    <p className="text-sm text-gray-400">Tags: {(x.tags || []).join(', ')}</p>
-                    <p className="text-sm text-gray-400">Duration: {x.tradeDuration || 0} min, Stars: {x.stars || 0}</p>
-                    {x.image && <img src={x.image} alt="Trade screenshot" className="mt-2 max-w-[250px] rounded-lg smooth-transition" />}
-                    <div className="mt-2">
-                      <button
-                        onClick={() => {
-                          if (window.confirm(`Are you sure you want to delete this trade?`)) {
-                            dt(x.date, trades.indexOf(x));
-                          }
-                        }}
-                        className="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-500 text-sm smooth-transition"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
+                  <TradeItem key={`${x.date}-${i}`} x={x} i={trades.indexOf(x)} d={x.date} cp={cp} fi={fi} ut={ut} dt={dt} setEdit={setEdit} st={st} markets={markets} />
                 ))
               )}
             </div>
@@ -1115,7 +1178,7 @@
       );
     }
 
-    function DayOverview({ t, d, sd, gp, gc, dt }) {
+    function DayOverview({ t, d, sd, gp, gc, dt, fi, cp }) {
       const [selectedImage, setSelectedImage] = useState(null);
       const { tp, tt, wr, ap, aw, al, mw, ml, md, pf, t: dtTrades, longWR, shortWR } = calcStats(t[d] || []);
       const ad = tt > 0 ? dtTrades.reduce((s, x) => s + (x.tradeDuration || 0), 0) / tt : 0;
@@ -1229,31 +1292,7 @@
               <div>
                 <h3 className="text-xl font-semibold text-gray-300 mb-4">Trade List</h3>
                 {dtTrades.map((x, i) => (
-                  <div key={i} className="p-3.5 bg-gray-700 rounded-lg mb-2 smooth-transition">
-                    <p className="text-gray-200 text-base">
-                      <strong>{(x.profitLossDollar || 0).toFixed(2)} $</strong> ({x.market}, R:R {x.riskReward || 0})
-                    </p>
-                    <p className="text-sm text-gray-400">Type: {x.tradeType || 'Long'}</p>
-                    <p className="text-sm text-gray-400">Strategy: {x.strategy}</p>
-                    <p className="text-sm text-gray-400">Tags: {(x.tags || []).join(', ')}</p>
-                    <p className="text-sm text-gray-400">Duration: {x.tradeDuration || 0} min, Stars: {x.stars || 0}</p>
-                    {x.image && (
-                      <img
-                        src={x.image}
-                        alt="Trade screenshot"
-                        className="mt-2 max-w-[250px] rounded-lg cursor-pointer smooth-transition"
-                        onClick={() => setSelectedImage(x.image)}
-                      />
-                    )}
-                    <div className="mt-2">
-                      <button
-                        onClick={() => handleDeleteTrade(i)}
-                        className="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-500 text-sm smooth-transition"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
+                  <TradeItem key={i} x={x} i={i} d={d} cp={cp} fi={fi} ut={ut} dt={dt} setEdit={setEdit} st={st} markets={markets} />
                 ))}
               </div>
             )}

@@ -158,3 +158,4 @@
 2025-06-01 00:06:58,296 [INFO] Received GET request for profile: Profile 1 from ::1
 2025-06-01 00:06:58,313 [INFO] Loaded data from trading_journal_data.json, size: 4.1 KB
 2025-06-01 00:06:58,314 [INFO] Sending response for /api/get_data/Profile 1, size: 1000.0 B
+2025-06-01 13:08:24,318 [INFO] Starting server on http://localhost:2108
