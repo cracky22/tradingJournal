@@ -24,6 +24,13 @@ MAX_LOG_SIZE = int(environ.get('TRADING_JOURNAL_MAX_LOG_SIZE', 10 * 1024 * 1024)
 BACKUP_COUNT = int(environ.get('TRADING_JOURNAL_LOG_BACKUP_COUNT', 5))
 UPLOAD_FOLDER = environ.get('TRADING_JOURNAL_UPLOAD_FOLDER', 'static/images')
 
+def format_size(bytes_size):
+    for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
+        if bytes_size < 1024.0:
+            return f"{bytes_size:.2f} {unit}"
+        bytes_size /= 1024.0
+    return f"{bytes_size:.2f} PB"
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
@@ -45,14 +52,16 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
-# In-memory cache for the data
 cached_data = None
 last_modified_time = 0
 
 def load_data_from_file():
     try:
         with open(DATA_FILE, 'r') as f:
-            return json.load(f)
+            content = f.read()
+            size = format_size(len(content.encode('utf-8')))
+            logger.info(f"Loading data from file ({size})")
+            return json.loads(content)
     except Exception as e:
         logger.error(f"Error loading data: {str(e)}")
         init_data_file()
@@ -61,7 +70,6 @@ def load_data_from_file():
 def load_data():
     global cached_data, last_modified_time
     try:
-        # Check if the file has been modified since last load
         current_mtime = os.path.getmtime(DATA_FILE)
         if cached_data is None or current_mtime > last_modified_time:
             cached_data = load_data_from_file()
@@ -79,15 +87,17 @@ def save_data(data):
         if os.path.exists(DATA_FILE):
             shutil.copy2(DATA_FILE, backup_file)
             logger.info(f"Created backup: {backup_file}")
-        
+
         with open(DATA_FILE, 'w') as f:
             json.dump(data, f, indent=2)
-        
+
+        size = os.path.getsize(DATA_FILE)
+        logger.info(f"Saved data to file ({format_size(size)})")
+
         if os.path.exists(backup_file):
             os.remove(backup_file)
             logger.info(f"Removed backup: {backup_file}")
-        
-        # Update the cache after saving
+
         cached_data = data
         last_modified_time = os.path.getmtime(DATA_FILE)
     except Exception as e:
@@ -120,6 +130,7 @@ def get_profiles():
     try:
         data = load_data()
         profiles = list(data.get('profiles', {}).keys()) or ['Profile 1']
+        logger.info(f"Fetched profiles: {profiles}")
         return jsonify({'profiles': profiles})
     except Exception as e:
         logger.error(f"Error fetching profiles: {str(e)}")
@@ -130,7 +141,9 @@ def get_data(profile_name):
     try:
         data = load_data()
         profile_data = data.get('profiles', {}).get(profile_name, {})
-        
+        size = len(json.dumps(profile_data).encode('utf-8'))
+        logger.info(f"Fetched data for profile '{profile_name}' ({format_size(size)})")
+
         trades = profile_data.get('trades', {})
         modified_trades = {}
         for date, trade_list in trades.items():
@@ -138,7 +151,7 @@ def get_data(profile_name):
                 {**trade, 'image': trade.get('image'), 'imageRef': None}
                 for trade in trade_list
             ]
-        
+
         response = {
             'trades': modified_trades,
             'tags': profile_data.get('tags', []),
@@ -156,15 +169,16 @@ def get_image(profile_name, date, index):
         profile_data = data.get('profiles', {}).get(profile_name, {})
         trades = profile_data.get('trades', {}).get(date, [])
         index = int(index)
-        
+
         if index < 0 or index >= len(trades):
             return jsonify({'error': 'Invalid trade index'}), 404
-        
+
         trade = trades[index]
         image_data = trade.get('image')
         if not image_data:
             return jsonify({'error': 'No image for this trade'}), 404
-        
+
+        logger.info(f"Fetched image for profile={profile_name}, date={date}, index={index}, size={format_size(len(image_data.encode('utf-8')))}")
         return jsonify({'image': image_data})
     except Exception as e:
         logger.error(f"Error fetching image for profile {profile_name}, date {date}, index {index}: {str(e)}")
@@ -175,42 +189,41 @@ def upload_image():
     try:
         if 'image' not in request.files:
             return jsonify({'error': 'No image file provided'}), 400
-        
+
         file = request.files['image']
         if file.filename == '':
             return jsonify({'error': 'No selected file'}), 400
-        
+
         profile = request.form.get('profile')
         date = request.form.get('date')
         index = request.form.get('index')
-        
+
         if not all([profile, date, index]):
             return jsonify({'error': 'Missing profile, date, or index'}), 400
-        
+
         index = int(index)
-        
         data = load_data()
         profile_data = data.get('profiles', {}).get(profile, {})
         trades = profile_data.get('trades', {}).get(date, [])
-        
+
         if index < 0 or index > len(trades):
             return jsonify({'error': 'Invalid trade index'}), 400
-        
-        # Convert image to base64
-        image_data = base64.b64encode(file.read()).decode('utf-8')
-        
-        # Update trade with image data
+
+        image_bytes = file.read()
+        image_data = base64.b64encode(image_bytes).decode('utf-8')
+        logger.info(f"Uploaded image for profile={profile}, date={date}, index={index}, size={format_size(len(image_bytes))}")
+
         if index < len(trades):
             trades[index]['image'] = image_data
         else:
             trade = {'date': date, 'image': image_data}
             trades.append(trade)
-        
+
         profile_data['trades'] = profile_data.get('trades', {})
         profile_data['trades'][date] = trades
         data['profiles'][profile] = profile_data
         save_data(data)
-        
+
         return jsonify({'message': 'Image uploaded successfully', 'image': image_data})
     except Exception as e:
         logger.error(f"Error uploading image: {str(e)}")
@@ -224,11 +237,11 @@ def submit_data():
         if not valid:
             logger.error(f"Invalid data: {error}")
             return jsonify({'error': error}), 400
-        
+
         current_data = load_data()
         profiles = data.get('profiles', ['Profile 1'])
         current_profile = data.get('currentProfile', 'Profile 1')
-    
+
         current_data['profiles'] = current_data.get('profiles', {})
         for profile in profiles:
             current_data['profiles'][profile] = {
@@ -236,10 +249,11 @@ def submit_data():
                 'tags': data.get('tags', []),
                 'strategies': data.get('strategies', [])
             }
-        
+
         current_data['currentProfile'] = current_profile
-        
+        logger.info(f"Submitting data: size={format_size(len(json.dumps(current_data).encode('utf-8')))}")
         save_data(current_data)
+
         return jsonify({'message': 'Data saved successfully'})
     except Exception as e:
         logger.error(f"Error submitting data: {str(e)}")
@@ -272,6 +286,5 @@ if __name__ == '__main__':
     signal.signal(signal.SIGINT, signal_handler)
     threading.Thread(target=open_browser, daemon=True).start()
     logger.info(f"Starting server on http://{HOST}:{PORT}")
-    # Initialize the cache on startup
     load_data()
     serve(app, host=HOST, port=PORT)
