@@ -4,33 +4,52 @@ function DayOverviewTrades({ trades, date, dt, fi, cp }) {
   const [selectedImage, setSelectedImage] = useState(null);
 
   const openImageViewer = (imageSrc) => {
+    console.log(`[openImageViewer] Öffne Bild-Viewer mit Bildquelle:`, imageSrc);
     setSelectedImage(imageSrc);
   };
 
   const closeImageViewer = (e) => {
+    console.log(`[closeImageViewer] Klick Event erkannt. Event Target:`, e.target, 'Current Target:', e.currentTarget);
     if (e.target === e.currentTarget || e.target.className.includes('close')) {
+      console.log(`[closeImageViewer] Bedingungen erfüllt, Bild-Viewer wird geschlossen.`);
       setSelectedImage(null);
+    } else {
+      console.log(`[closeImageViewer] Bedingungen nicht erfüllt, Bild-Viewer bleibt offen.`);
     }
   };
 
   const handleDelete = (index) => {
+    console.log(`[handleDelete] Löschvorgang für Trade mit Index: ${index} gestartet.`);
     if (window.confirm(`Are you sure you want to delete this trade?`)) {
+      console.log(`[handleDelete] Benutzer bestätigt Löschung.`);
       dt(date, index);
+      console.log(`[handleDelete] Callback dt wurde aufgerufen mit Datum: ${date} und Index: ${index}`);
+    } else {
+      console.log(`[handleDelete] Benutzer hat Löschung abgebrochen.`);
     }
   };
+
+  console.log(`[DayOverviewTrades] Rendering Trades für Datum: ${date}. Anzahl Trades: ${trades.length}`);
 
   return (
     <div className="mt-6">
       <h3 className="text-lg font-semibold text-gray-300 mb-2">Trades on {date}</h3>
       <div className="space-y-2">
         {trades.map((trade, index) => {
+          console.log(`[Rendering Trade] Index: ${index}`, trade);
+
           const imageSrc = trade.image?.startsWith('data:image')
             ? trade.image
             : trade.image
             ? `data:image/png;base64,${trade.image}`
             : null;
 
+          console.log(`[Rendering Trade] Ermitteltes imageSrc für Index ${index}:`, imageSrc);
+
           const hasValidImage = !!imageSrc;
+          if (!hasValidImage) {
+            console.log(`[Rendering Trade] Kein gültiges Bild für Trade Index ${index}`);
+          }
 
           return (
             <div
@@ -48,7 +67,10 @@ function DayOverviewTrades({ trades, date, dt, fi, cp }) {
                     src={imageSrc}
                     alt="Trade screenshot"
                     className="w-16 h-16 object-cover rounded mt-2 cursor-pointer"
-                    onClick={() => openImageViewer(imageSrc)}
+                    onClick={() => {
+                      console.log(`[onClick Bild] Trade Index ${index} Bild angeklickt.`);
+                      openImageViewer(imageSrc);
+                    }}
                   />
                 ) : (
                   <div className="w-16 h-16 bg-gray-600 flex items-center justify-center rounded mt-2 text-white text-xs">
@@ -58,7 +80,10 @@ function DayOverviewTrades({ trades, date, dt, fi, cp }) {
               </div>
               <button
                 className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
-                onClick={() => handleDelete(index)}
+                onClick={() => {
+                  console.log(`[onClick Delete] Trade Index ${index} Löschen-Button geklickt.`);
+                  handleDelete(index);
+                }}
               >
                 Delete
               </button>
@@ -74,7 +99,10 @@ function DayOverviewTrades({ trades, date, dt, fi, cp }) {
       {selectedImage && (
         <div
           className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
-          onClick={closeImageViewer}
+          onClick={(e) => {
+            console.log(`[Image Viewer] Klick auf Overlay erkannt.`);
+            closeImageViewer(e);
+          }}
         >
           <div className="relative">
             <img
@@ -84,7 +112,10 @@ function DayOverviewTrades({ trades, date, dt, fi, cp }) {
             />
             <button
               className="absolute top-2 right-2 text-white text-2xl close"
-              onClick={closeImageViewer}
+              onClick={(e) => {
+                console.log(`[Image Viewer] Klick auf Close-Button erkannt.`);
+                closeImageViewer(e);
+              }}
             >
               ×
             </button>
