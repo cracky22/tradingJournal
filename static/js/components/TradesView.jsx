@@ -38,16 +38,16 @@ function TradesView({
       let hasNewImages = false;
       for (let i = 0; i < dayTrades.length; i++) {
         const trade = dayTrades[i];
-        if (trade.imageRef) {
+        if (trade.image) {
           const key = `${d}-${i}`;
-          if (!(key in images)) { // Check if key doesn't exist in images
+          if (!(key in images)) {
             try {
-              const imageUrl = await fi(cp, d, i);
-              newImages[key] = imageUrl;
+              const response = await fi(cp, d, i);
+              newImages[key] = `data:image/png;base64,${response.image}`;
               hasNewImages = true;
             } catch (error) {
               console.error(`Error fetching image for ${key}:`, error);
-              newImages[key] = null; // Mark as failed to avoid retrying
+              newImages[key] = null;
               hasNewImages = true;
             }
           }
@@ -58,7 +58,7 @@ function TradesView({
       }
     };
     loadImages();
-  }, [dayTrades, cp, fi, d]); // Removed 'images' from dependencies to prevent loop
+  }, [dayTrades, cp, fi, d]);
 
   // Populate form for editing
   useEffect(() => {
@@ -137,7 +137,7 @@ function TradesView({
       stars: parseInt(formData.stars) || 0,
       strategy: formData.strategy,
       tradeDuration: parseFloat(formData.tradeDuration) || 0,
-      imageRef: formData.image ? `${d}-${dayTrades.length}` : null,
+      image: formData.image ? await convertImageToBase64(formData.image) : null,
     };
 
     try {
@@ -201,6 +201,16 @@ function TradesView({
       strategy: "",
       tradeDuration: "",
       image: null,
+    });
+  };
+
+  // Helper function to convert image to base64
+  const convertImageToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result.split(',')[1]); // Remove data URL prefix
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
     });
   };
 
@@ -392,7 +402,7 @@ function TradesView({
             <tbody>
               {dayTrades.map((trade, index) => {
                 const imageKey = `${d}-${index}`;
-                const hasImage = trade.imageRef && imageKey in images;
+                const hasImage = trade.image && imageKey in images;
                 const imageFailed = hasImage && images[imageKey] === null;
                 return (
                   <tr
@@ -414,7 +424,7 @@ function TradesView({
                     <td className="p-3">{trade.strategy || "N/A"}</td>
                     <td className="p-3">{trade.tradeDuration || "N/A"}</td>
                     <td className="p-3">
-                      {!trade.imageRef ? (
+                      {!trade.image ? (
                         "No Image"
                       ) : hasImage ? (
                         imageFailed ? (
