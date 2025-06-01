@@ -44,7 +44,7 @@ function CalendarView({
 
   const handleDayClick = (date) => {
     sd(date);
-    so(date);
+    so({ date, trades: t[date] || [] });
   };
 
   const openImageViewer = (imageSrc) => {
