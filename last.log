@@ -1,1 +1,11 @@
 2025-06-01 17:42:33,673 [INFO] Starting server on http://localhost:2108
+2025-06-01 17:42:35,769 [INFO] Loaded data from trading_journal_data.json, size: 736.0 B
+2025-06-01 17:42:35,803 [INFO] Loaded data from trading_journal_data.json, size: 736.0 B
+2025-06-01 17:42:41,847 [INFO] Loaded data from trading_journal_data.json, size: 736.0 B
+2025-06-01 17:42:41,857 [INFO] Created backup: trading_journal_data.json.backup
+2025-06-01 17:42:41,862 [INFO] Saved data to trading_journal_data.json, size: 794.0 B
+2025-06-01 17:42:41,864 [INFO] Removed backup: trading_journal_data.json.backup
+2025-06-01 17:42:44,025 [INFO] Loaded data from trading_journal_data.json, size: 794.0 B
+2025-06-01 17:42:44,039 [INFO] Loaded data from trading_journal_data.json, size: 794.0 B
+2025-06-01 17:42:45,203 [INFO] Loaded data from trading_journal_data.json, size: 794.0 B
+2025-06-01 17:42:45,242 [INFO] Loaded data from trading_journal_data.json, size: 794.0 B
