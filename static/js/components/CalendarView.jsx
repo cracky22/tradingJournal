@@ -62,7 +62,9 @@ function CalendarView({
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
 
-  const dayTrades = t[d] || [];
+  // Use the current date as default if no day is selected
+  const currentDate = d || `${y}-${String(m + 1).padStart(2, '0')}-${String(new Date(y, m, 1).getDate()).padStart(2, '0')}`;
+  const dayTrades = t[currentDate] || [];
 
   return (
     <div className="bg-gray-800 p-6 rounded-lg shadow-lg relative">
@@ -124,54 +126,51 @@ function CalendarView({
         ))}
       </div>
 
-      {/* Trades for Selected Day or Initial Display */}
-      {(d || dayTrades.length > 0) && (
-        <div className="mt-6">
-          <h3 className="text-lg font-semibold text-gray-300 mb-2">Trades on {d || 'Selected Day'}</h3>
-          <div className="space-y-2">
-            {dayTrades.map((trade, index) => {
-              const hasValidImage =
-                trade.image &&
-                (trade.image.startsWith('data:image') || /^[A-Za-z0-9+/=]+$/.test(trade.image));
-              const imageSrc =
-                trade.image && !trade.image.startsWith('data:image')
-                  ? `data:image/png;base64,${trade.image}`
-                  : trade.image;
+      {/* Trades for Current or Selected Day */}
+      <div className="mt-6">
+        <h3 className="text-lg font-semibold text-gray-300 mb-2">Trades on {currentDate}</h3>
+        <div className="space-y-2">
+          {dayTrades.map((trade, index) => {
+            const hasValidImage =
+              trade.image &&
+              (trade.image.startsWith('data:image') || /^[A-Za-z0-9+/=]+$/.test(trade.image));
+            const imageSrc =
+              trade.image && !trade.image.startsWith('data:image')
+                ? `data:image/png;base64,${trade.image}`
+                : trade.image;
 
-              return (
-                <div
-                  key={index}
-                  className="bg-gray-700 p-3 rounded-lg shadow flex justify-between items-center"
-                >
-                  <div>
-                    <p className="text-white">
-                      {trade.market || 'N/A'} - ${trade.profitLossDollar?.toFixed(2) || '0.00'}
-                    </p>
-                    <p className="text-gray-400 text-sm">{trade.strategy || 'N/A'}</p>
+            return (
+              <div
+                key={index}
+                className="bg-gray-700 p-3 rounded-lg shadow flex justify-between items-center"
+              >
+                <div>
+                  <p className="text-white">
+                    {trade.market || 'N/A'} - ${trade.profitLossDollar?.toFixed(2) || '0.00'}
+                  </p>
+                  <p className="text-gray-400 text-sm">{trade.strategy || 'N/A'}</p>
 
-                    {hasValidImage ? (
-                      <img
-                        src={imageSrc}
-                        alt="Trade screenshot"
-                        className="w-16 h-16 object-cover rounded mt-2 cursor-pointer"
-                        onClick={() => openImageViewer(imageSrc)}
-                      />
-                    ) : (
-                      <div className="w-16 h-16 bg-gray-600 flex items-center justify-center rounded mt-2 text-white text-xs">
-                        No Image
-                      </div>
-                    )}
-                  </div>
+                  {hasValidImage ? (
+                    <img
+                      src={imageSrc}
+                      alt="Trade screenshot"
+                      className="w-16 h-16 object-cover rounded mt-2 cursor-pointer"
+                      onClick={() => openImageViewer(imageSrc)}
+                    />
+                  ) : (
+                    <div className="w-16 h-16 bg-gray-600 flex items-center justify-center rounded mt-2 text-white text-xs">
+                      No Image
+                    </div>
+                  )}
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            );
+          })}
         </div>
-      )}
-
-      {d && dayTrades.length === 0 && (
-        <p className="mt-6 text-gray-400">No trades for {d}.</p>
-      )}
+        {dayTrades.length === 0 && (
+          <p className="mt-2 text-gray-400">No trades for {currentDate}.</p>
+        )}
+      </div>
 
       {/* Image Viewer */}
       {selectedImage && (
