@@ -17,26 +17,42 @@ function DayOverview({
 
   // Load trades for the selected date
   useEffect(() => {
+    console.log(`[DayOverview] Loading trades for date: ${d}`);
     const dayTrades = t[d] || [];
+    console.log(`[DayOverview] Found ${dayTrades.length} trades for date: ${d}`);
     setTrades(dayTrades);
   }, [t, d]);
 
   // Fetch images for trades
   useEffect(() => {
     const loadImages = async () => {
+      console.log(`[DayOverview] Starting to load images for ${trades.length} trades on ${d}`);
       const newImages = {};
       for (let i = 0; i < trades.length; i++) {
         const trade = trades[i];
         if (trade.imageRef) {
           const key = `${d}-${i}`;
           if (!images[key]) {
-            const image = await fi(cp, d, i);
-            newImages[key] = image;
+            console.log(`[DayOverview] Fetching image for trade index ${i} with key ${key}`);
+            try {
+              const image = await fi(cp, d, i);
+              newImages[key] = image;
+              console.log(`[DayOverview] Successfully fetched image for key ${key}`);
+            } catch (error) {
+              console.error(`[DayOverview] Error fetching image for key ${key}:`, error);
+            }
+          } else {
+            console.log(`[DayOverview] Image for key ${key} already loaded`);
           }
+        } else {
+          console.log(`[DayOverview] No imageRef for trade index ${i}, skipping image fetch`);
         }
       }
       if (Object.keys(newImages).length > 0) {
+        console.log(`[DayOverview] Updating images state with ${Object.keys(newImages).length} new images`);
         setImages((prev) => ({ ...prev, ...newImages }));
+      } else {
+        console.log(`[DayOverview] No new images to update`);
       }
     };
     loadImages();
@@ -45,62 +61,76 @@ function DayOverview({
   // Initialize Cumulative Profit Chart
   useEffect(() => {
     if (chartRef.current) {
+      console.log(`[DayOverview] Initializing/updating cumulative profit chart for date: ${d}`);
       if (chartInstance.current) {
+        console.log(`[DayOverview] Destroying existing chart instance`);
         chartInstance.current.destroy();
       }
       const ctx = chartRef.current.getContext("2d");
-      chartInstance.current = new Chart(ctx, {
-        type: "line",
-        data: gc(trades),
-        options: {
-          responsive: true,
-          scales: {
-            x: {
-              title: { display: true, text: "Trade", color: "#e5e7eb" },
-              ticks: { color: "#e5e7eb" },
+      try {
+        chartInstance.current = new Chart(ctx, {
+          type: "line",
+          data: gc(trades),
+          options: {
+            responsive: true,
+            scales: {
+              x: {
+                title: { display: true, text: "Trade", color: "#e5e7eb" },
+                ticks: { color: "#e5e7eb" },
+              },
+              y: {
+                title: { display: true, text: "Profit ($)", color: "#e5e7eb" },
+                ticks: { color: "#e5e7eb" },
+              },
             },
-            y: {
-              title: { display: true, text: "Profit ($)", color: "#e5e7eb" },
-              ticks: { color: "#e5e7eb" },
-            },
-          },
-          plugins: {
-            legend: { labels: { color: "#e5e7eb" } },
-            tooltip: {
-              callbacks: {
-                label: (context) => {
-                  const trade = context.raw.tradeData;
-                  return trade
-                    ? `Profit: $${context.raw.y.toFixed(2)}, Market: ${
-                        trade.market || "N/A"
-                      }`
-                    : `Profit: $${context.raw.y.toFixed(2)}`;
+            plugins: {
+              legend: { labels: { color: "#e5e7eb" } },
+              tooltip: {
+                callbacks: {
+                  label: (context) => {
+                    const trade = context.raw.tradeData;
+                    return trade
+                      ? `Profit: $${context.raw.y.toFixed(2)}, Market: ${
+                          trade.market || "N/A"
+                        }`
+                      : `Profit: $${context.raw.y.toFixed(2)}`;
+                  },
                 },
               },
             },
           },
-        },
-      });
+        });
+        console.log(`[DayOverview] Chart initialized successfully`);
+      } catch (error) {
+        console.error(`[DayOverview] Error initializing chart:`, error);
+      }
     }
 
     return () => {
       if (chartInstance.current) {
+        console.log(`[DayOverview] Cleaning up chart instance on unmount/update`);
         chartInstance.current.destroy();
       }
     };
-  }, [trades, gc]);
+  }, [trades, gc, d]);
 
   const handleDeleteTrade = (index) => {
+    console.log(`[DayOverview] User requested to delete trade at index: ${index} on date: ${d}`);
     if (window.confirm("Are you sure you want to delete this trade?")) {
+      console.log(`[DayOverview] Deleting trade at index ${index} for date ${d}`);
       dt(d, index);
+    } else {
+      console.log(`[DayOverview] Delete trade cancelled by user`);
     }
   };
 
   const handleBack = () => {
+    console.log(`[DayOverview] Back button clicked, resetting date from: ${d}`);
     sd(d);
     // Clear the overview date to return to the previous view
     // Assuming setOvDate(null) is passed via sd to reset the view
     sd(null);
+    console.log(`[DayOverview] Date reset to null, returning to previous view`);
   };
 
   return (
