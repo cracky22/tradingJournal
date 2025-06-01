@@ -11,13 +11,6 @@ function CalendarView({
   sy, // setYear: Function to set year
   so // setOvDate: Function to set overview date (navigate to DayOverview)
 }) {
-  const [dayTrades, setDayTrades] = useState(t[d] || []);
-
-  // Update trades for the selected day whenever t or d changes
-  useEffect(() => {
-    setDayTrades(t[d] || []);
-  }, [t, d]);
-
   // Generate calendar days for the current month
   const getCalendarDays = () => {
     const firstDay = new Date(y, m, 1);
@@ -67,6 +60,9 @@ function CalendarView({
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
+
+  // Use t[d] directly in render to ensure real-time updates
+  const dayTrades = t[d] || [];
 
   return (
     <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
