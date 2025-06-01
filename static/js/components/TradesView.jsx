@@ -40,14 +40,15 @@ function TradesView({
         const trade = dayTrades[i];
         if (trade.imageRef) {
           const key = `${d}-${i}`;
-          if (!images[key]) {
+          if (!(key in images)) { // Check if key doesn't exist in images
             try {
-              const image = await fi(cp, d, i);
-              newImages[key] = image;
+              const imageUrl = await fi(cp, d, i);
+              newImages[key] = imageUrl;
               hasNewImages = true;
             } catch (error) {
               console.error(`Error fetching image for ${key}:`, error);
               newImages[key] = null; // Mark as failed to avoid retrying
+              hasNewImages = true;
             }
           }
         }
@@ -153,7 +154,8 @@ function TradesView({
           signal: AbortSignal.timeout(10000),
         });
         if (!response.ok) {
-          throw new Error("Failed to upload image");
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || "Failed to upload image");
         }
       }
 
@@ -390,6 +392,8 @@ function TradesView({
             <tbody>
               {dayTrades.map((trade, index) => {
                 const imageKey = `${d}-${index}`;
+                const hasImage = trade.imageRef && imageKey in images;
+                const imageFailed = hasImage && images[imageKey] === null;
                 return (
                   <tr
                     key={imageKey}
@@ -410,18 +414,26 @@ function TradesView({
                     <td className="p-3">{trade.strategy || "N/A"}</td>
                     <td className="p-3">{trade.tradeDuration || "N/A"}</td>
                     <td className="p-3">
-                      {trade.imageRef ? (
-                        images[imageKey] ? (
+                      {!trade.imageRef ? (
+                        "No Image"
+                      ) : hasImage ? (
+                        imageFailed ? (
+                          "Image Not Found"
+                        ) : (
                           <img
                             src={images[imageKey]}
                             alt="Trade screenshot"
                             className="w-16 h-16 object-cover rounded"
+                            onError={() => {
+                              setImages((prev) => ({
+                                ...prev,
+                                [imageKey]: null,
+                              }));
+                            }}
                           />
-                        ) : (
-                          <span className="text-gray-400">Loading...</span>
                         )
                       ) : (
-                        "No Image"
+                        <span className="text-gray-400">Loading...</span>
                       )}
                     </td>
                     <td className="p-3 flex gap-2">
