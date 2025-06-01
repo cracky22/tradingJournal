@@ -1,6 +1,6 @@
 const { useState } = React;
 
-function DayOverviewTrades({ trades, date }) {
+function DayOverviewTrades({ trades, date, dt, fi, cp }) {
   const [selectedImage, setSelectedImage] = useState(null);
 
   const openImageViewer = (imageSrc) => {
@@ -10,6 +10,12 @@ function DayOverviewTrades({ trades, date }) {
   const closeImageViewer = (e) => {
     if (e.target === e.currentTarget || e.target.className.includes('close')) {
       setSelectedImage(null);
+    }
+  };
+
+  const handleDelete = (index) => {
+    if (window.confirm(`Are you sure you want to delete this trade?`)) {
+      dt(date, index);
     }
   };
 
@@ -73,7 +79,7 @@ function DayOverviewTrades({ trades, date }) {
                     <td className="p-3">
                       <button
                         className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 smooth-transition"
-                        onClick={() => {/* Implement delete logic if needed */}}
+                        onClick={() => handleDelete(index)}
                       >
                         Delete
                       </button>
