@@ -26,21 +26,17 @@ function TradesView({
     image: null,
   });
   const [newTag, setNewTag] = useState("");
-  const [trades, setTrades] = useState([]);
   const [images, setImages] = useState({});
 
-  // Load trades for the selected date
-  useEffect(() => {
-    const dayTrades = t[d] || [];
-    setTrades(dayTrades);
-  }, [t, d]);
+  // Load trades for the selected date directly from props
+  const dayTrades = t[d] || [];
 
   // Fetch images for trades
   useEffect(() => {
     const loadImages = async () => {
       const newImages = {};
-      for (let i = 0; i < trades.length; i++) {
-        const trade = trades[i];
+      for (let i = 0; i < dayTrades.length; i++) {
+        const trade = dayTrades[i];
         if (trade.imageRef) {
           const key = `${d}-${i}`;
           if (!images[key]) {
@@ -54,22 +50,32 @@ function TradesView({
       }
     };
     loadImages();
-  }, [trades, cp, fi, d, images]);
+  }, [dayTrades, cp, fi, d, images]);
 
   // Populate form for editing
   useEffect(() => {
-    if (edit !== null && trades[edit]) {
+    if (edit !== null && dayTrades[edit]) {
       setFormData({
-        market: trades[edit].market || "",
-        profitLossDollar: trades[edit].profitLossDollar || "",
-        tags: trades[edit].tags || [],
-        stars: trades[edit].stars || 0,
-        strategy: trades[edit].strategy || "",
-        tradeDuration: trades[edit].tradeDuration || "",
+        market: dayTrades[edit].market || "",
+        profitLossDollar: dayTrades[edit].profitLossDollar || "",
+        tags: dayTrades[edit].tags || [],
+        stars: dayTrades[edit].stars || 0,
+        strategy: dayTrades[edit].strategy || "",
+        tradeDuration: dayTrades[edit].tradeDuration || "",
+        image: null,
+      });
+    } else {
+      setFormData({
+        market: "",
+        profitLossDollar: "",
+        tags: [],
+        stars: 0,
+        strategy: "",
+        tradeDuration: "",
         image: null,
       });
     }
-  }, [edit, trades]);
+  }, [edit, dayTrades]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -123,7 +129,7 @@ function TradesView({
       stars: parseInt(formData.stars) || 0,
       strategy: formData.strategy,
       tradeDuration: parseFloat(formData.tradeDuration) || 0,
-      imageRef: formData.image ? `${d}-${trades.length}` : null,
+      imageRef: formData.image ? `${d}-${dayTrades.length}` : null,
     };
 
     try {
@@ -132,7 +138,7 @@ function TradesView({
         formDataToSend.append("image", formData.image);
         formDataToSend.append("profile", cp);
         formDataToSend.append("date", d);
-        formDataToSend.append("index", edit !== null ? edit : trades.length);
+        formDataToSend.append("index", edit !== null ? edit : dayTrades.length);
 
         const response = await fetch("/api/upload_image", {
           method: "POST",
@@ -146,11 +152,11 @@ function TradesView({
 
       if (edit !== null) {
         ut(d, edit, trade);
-        setEdit(null);
       } else {
         at(trade);
       }
 
+      setEdit(null);
       setFormData({
         market: "",
         profitLossDollar: "",
@@ -357,7 +363,7 @@ function TradesView({
       </div>
 
       {/* Trades List */}
-      {trades.length === 0 ? (
+      {dayTrades.length === 0 ? (
         <p className="text-gray-400">No trades for this day.</p>
       ) : (
         <div className="overflow-x-auto">
@@ -375,7 +381,7 @@ function TradesView({
               </tr>
             </thead>
             <tbody>
-              {trades.map((trade, index) => {
+              {dayTrades.map((trade, index) => {
                 const imageKey = `${d}-${index}`;
                 return (
                   <tr
