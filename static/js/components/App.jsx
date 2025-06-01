@@ -543,7 +543,7 @@ function App() {
           )}
         </div>
         <div className="flex-1 p-6 overflow-y-auto smooth-transition z-10">
-          {ovDate && ovDate.date ? (
+          {ovDate ? (
             <DayOverview
               t={trades[currentProfile] || {}}
               d={ovDate}
