@@ -252,3 +252,4 @@
 2025-06-01 13:28:56,272 [INFO] Created backup: trading_journal_data.json.backup
 2025-06-01 13:28:56,289 [INFO] Saved data to trading_journal_data.json, size: 2.2 KB
 2025-06-01 13:28:56,291 [INFO] Removed backup: trading_journal_data.json.backup
+2025-06-01 13:29:30,202 [INFO] Shutting down server...
