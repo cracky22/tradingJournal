@@ -5,23 +5,25 @@
         "2025-06-01": [
           {
             "date": "2025-06-01",
+            "image": null,
+            "imageRef": false,
             "market": "",
             "profitLossDollar": 123,
-            "tags": [],
             "stars": 0,
             "strategy": "",
-            "tradeDuration": 123,
-            "imageRef": null
+            "tags": [],
+            "tradeDuration": 123
           },
           {
             "date": "2025-06-01",
+            "image": null,
+            "imageRef": false,
             "market": "",
             "profitLossDollar": 234,
-            "tags": [],
             "stars": 0,
             "strategy": "",
-            "tradeDuration": 234,
-            "imageRef": null
+            "tags": [],
+            "tradeDuration": 234
           }
         ]
       },
