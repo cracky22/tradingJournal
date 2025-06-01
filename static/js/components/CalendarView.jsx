@@ -1,8 +1,6 @@
 const { useState } = React;
 
-function CalendarView({
-  t, d, sd, gp, m, y, sm, sy, so
-}) {
+function CalendarView({ t, d, sd, gp, m, y, sm, sy, so }) {
   const [selectedImage, setSelectedImage] = useState(null);
 
   const getCalendarDays = () => {
@@ -17,7 +15,9 @@ function CalendarView({
     }
 
     for (let i = 1; i <= totalDays; i++) {
-      const dateStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+      const dateStr = `${y}-${String(m + 1).padStart(2, "0")}-${String(
+        i
+      ).padStart(2, "0")}`;
       days.push({ date: dateStr, profit: gp(dateStr) });
     }
 
@@ -52,18 +52,32 @@ function CalendarView({
   };
 
   const closeImageViewer = (e) => {
-    if (e.target === e.currentTarget || e.target.className.includes('close')) {
+    if (e.target === e.currentTarget || e.target.className.includes("close")) {
       setSelectedImage(null);
     }
   };
 
   const monthNames = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ];
 
   // Use the current date as default if no day is selected
-  const currentDate = d || `${y}-${String(m + 1).padStart(2, '0')}-${String(new Date(y, m, 1).getDate()).padStart(2, '0')}`;
+  const currentDate =
+    d ||
+    `${y}-${String(m + 1).padStart(2, "0")}-${String(
+      new Date(y, m, 1).getDate()
+    ).padStart(2, "0")}`;
   const dayTrades = t[currentDate] || [];
 
   return (
@@ -89,8 +103,11 @@ function CalendarView({
       </div>
 
       <div className="grid grid-cols-7 gap-1">
-        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
-          <div key={day} className="text-center text-gray-400 font-semibold p-2">
+        {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
+          <div
+            key={day}
+            className="text-center text-gray-400 font-semibold p-2"
+          >
             {day}
           </div>
         ))}
@@ -103,11 +120,11 @@ function CalendarView({
               day
                 ? day.profit !== 0
                   ? day.profit > 0
-                    ? 'bg-green-600 hover:bg-green-500 cursor-pointer'
-                    : 'bg-red-600 hover:bg-red-500 cursor-pointer'
-                  : 'bg-gray-700 hover:bg-gray-600 cursor-pointer'
-                : 'bg-gray-900'
-            } ${day && day.date === d ? 'ring-2 ring-blue-500' : ''}`}
+                    ? "bg-green-600 hover:bg-green-500 cursor-pointer"
+                    : "bg-red-600 hover:bg-red-500 cursor-pointer"
+                  : "bg-gray-700 hover:bg-gray-600 cursor-pointer"
+                : "bg-gray-900"
+            } ${day && day.date === d ? "ring-2 ring-blue-500" : ""}`}
           >
             {day && (
               <>
@@ -115,7 +132,7 @@ function CalendarView({
                 {day.profit !== 0 && (
                   <div
                     className="text-sm"
-                    style={{ color: day.profit > 0 ? '#22c55e' : '#ef4444' }}
+                    style={{ color: day.profit > 0 ? "#22c55e" : "#ef4444" }}
                   >
                     ${day.profit.toFixed(2)}
                   </div>
@@ -128,14 +145,17 @@ function CalendarView({
 
       {/* Trades for Current or Selected Day */}
       <div className="mt-6">
-        <h3 className="text-lg font-semibold text-gray-300 mb-2">Trades on {currentDate}</h3>
+        <h3 className="text-lg font-semibold text-gray-300 mb-2">
+          Trades on {currentDate}
+        </h3>
         <div className="space-y-2">
           {dayTrades.map((trade, index) => {
             const hasValidImage =
               trade.image &&
-              (trade.image.startsWith('data:image') || /^[A-Za-z0-9+/=]+$/.test(trade.image));
+              (trade.image.startsWith("data:image") ||
+                /^[A-Za-z0-9+/=]+$/.test(trade.image));
             const imageSrc =
-              trade.image && !trade.image.startsWith('data:image')
+              trade.image && !trade.image.startsWith("data:image")
                 ? `data:image/png;base64,${trade.image}`
                 : trade.image;
 
@@ -146,9 +166,12 @@ function CalendarView({
               >
                 <div>
                   <p className="text-white">
-                    {trade.market || 'N/A'} - ${trade.profitLossDollar?.toFixed(2) || '0.00'}
+                    {trade.market || "N/A"} - $
+                    {trade.profitLossDollar?.toFixed(2) || "0.00"}
                   </p>
-                  <p className="text-gray-400 text-sm">{trade.strategy || 'N/A'}</p>
+                  <p className="text-gray-400 text-sm">
+                    {trade.strategy || "N/A"}
+                  </p>
 
                   {hasValidImage ? (
                     <img

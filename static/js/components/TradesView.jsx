@@ -194,7 +194,7 @@ function TradesView({
   const convertImageToBase64 = (file) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result.split(',')[1]); // Remove data URL prefix
+      reader.onloadend = () => resolve(reader.result.split(",")[1]); // Remove data URL prefix
       reader.onerror = reject;
       reader.readAsDataURL(file);
     });
@@ -205,7 +205,7 @@ function TradesView({
   };
 
   const closeImageViewer = (e) => {
-    if (e.target === e.currentTarget || e.target.className.includes('close')) {
+    if (e.target === e.currentTarget || e.target.className.includes("close")) {
       setSelectedImage(null);
     }
   };
@@ -398,7 +398,9 @@ function TradesView({
             <tbody>
               {dayTrades.map((trade, index) => {
                 const imageKey = `${d}-${index}`;
-                const imageSrc = trade.image ? `data:image/png;base64,${trade.image}` : null;
+                const imageSrc = trade.image
+                  ? `data:image/png;base64,${trade.image}`
+                  : null;
                 return (
                   <tr
                     key={imageKey}
@@ -428,7 +430,9 @@ function TradesView({
                           className="w-16 h-16 object-cover rounded cursor-pointer"
                           onClick={() => openImageViewer(imageSrc)}
                           onError={() => {
-                            console.error(`Failed to load image for ${imageKey}`);
+                            console.error(
+                              `Failed to load image for ${imageKey}`
+                            );
                           }}
                         />
                       ) : (

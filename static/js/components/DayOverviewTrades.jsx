@@ -8,7 +8,7 @@ function DayOverviewTrades({ trades, date, dt, fi, cp }) {
   };
 
   const closeImageViewer = (e) => {
-    if (e.target === e.currentTarget || e.target.className.includes('close')) {
+    if (e.target === e.currentTarget || e.target.className.includes("close")) {
       setSelectedImage(null);
     }
   };
@@ -21,10 +21,12 @@ function DayOverviewTrades({ trades, date, dt, fi, cp }) {
 
   return (
     <div className="mt-6">
-      <h3 className="text-lg font-semibold text-gray-300 mb-2">Trades on {date}</h3>
+      <h3 className="text-lg font-semibold text-gray-300 mb-2">
+        Trades on {date}
+      </h3>
       <div className="space-y-2">
         {trades.map((trade, index) => {
-          const imageSrc = trade.image?.startsWith('data:image')
+          const imageSrc = trade.image?.startsWith("data:image")
             ? trade.image
             : trade.image
             ? `data:image/png;base64,${trade.image}`
@@ -39,9 +41,12 @@ function DayOverviewTrades({ trades, date, dt, fi, cp }) {
             >
               <div>
                 <p className="text-white">
-                  {trade.market || 'N/A'} - ${trade.profitLossDollar?.toFixed(2) || '0.00'}
+                  {trade.market || "N/A"} - $
+                  {trade.profitLossDollar?.toFixed(2) || "0.00"}
                 </p>
-                <p className="text-gray-400 text-sm">{trade.strategy || 'N/A'}</p>
+                <p className="text-gray-400 text-sm">
+                  {trade.strategy || "N/A"}
+                </p>
 
                 {hasValidImage ? (
                   <img
