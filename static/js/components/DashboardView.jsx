@@ -17,6 +17,7 @@ function DashboardView({
     avgLoss: 0,
     maxLossTrade: 0,
     maxDrawdown: 0,
+    winRate: 0, // Neue Statistik
     longWinRate: 0,
     shortWinRate: 0
   });
@@ -79,6 +80,10 @@ function DashboardView({
       maxDrawdown = Math.min(maxDrawdown, cumulative - peak);
     });
 
+    // Win Rate (overall)
+    const wins = trades.filter(trade => (trade.profitLossDollar || 0) > 0);
+    const winRate = totalTrades > 0 ? (wins.length / totalTrades) * 100 : 0;
+
     // Long Win Rate (with fallback if direction is missing)
     const longTrades = trades.filter(trade => trade.direction === 'Long' || !trade.direction);
     const longWins = longTrades.filter(trade => (trade.profitLossDollar || 0) > 0);
@@ -99,6 +104,7 @@ function DashboardView({
       avgLoss,
       maxLossTrade,
       maxDrawdown,
+      winRate, // Neue Statistik
       longWinRate,
       shortWinRate
     });
@@ -224,6 +230,10 @@ function DashboardView({
         </div>
 
         <div className="bg-gray-800 p-4 rounded-lg shadow">
+          <h3 className="text-lg font-semibold text-gray-300">Win Rate</h3>
+          <p className="text-2xl text-white">{stats.winRate.toFixed(1)}%</p>
+        </div>
+        <div className="bg-gray-800 p-4 rounded-lg shadow">
           <h3 className="text-lg font-semibold text-gray-300">Long Win Rate</h3>
           <p className="text-2xl text-white">{stats.longWinRate.toFixed(1)}%</p>
         </div>
@@ -231,8 +241,6 @@ function DashboardView({
           <h3 className="text-lg font-semibold text-gray-300">Short Win Rate</h3>
           <p className="text-2xl text-white">{stats.shortWinRate.toFixed(1)}%</p>
         </div>
-        {/* Empty div to maintain grid alignment */}
-        <div className="bg-transparent p-4"></div>
       </div>
 
       {/* Charts */}
