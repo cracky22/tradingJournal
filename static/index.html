@@ -201,7 +201,7 @@
 
           // Store in sessionStorage
           saveToSessionStorage(allData);
-          setTrades(allData.trades[allData.currentProfile] || {});
+          setTrades(allData.trades);
           setTagsState(allData.tags);
           setStrategies(allData.strategies);
         } catch (error) {
@@ -209,7 +209,7 @@
           alert(`Failed to fetch data: ${error.message || 'Network error'}`);
           setProfiles(['Profile 1']);
           setCurrentProfile('Profile 1');
-          setTrades({});
+          setTrades({ 'Profile 1': {} });
           setTagsState([]);
           setStrategies(['Trendfolge', 'Volumen', 'Fibonacci', 'Sweep', 'Range', 'RAIN']);
         } finally {
@@ -284,19 +284,44 @@
         if (!profile || !profiles.includes(profile)) {
           console.warn('Invalid profile selection, resetting to default');
           setCurrentProfile(profiles[0] || 'Profile 1');
-          setTrades({});
-          setTagsState([]);
-          setStrategies(['Trendfolge', 'Volumen', 'Fibonacci', 'Sweep', 'Range', 'RAIN']);
           setView('dashboard');
           setOvDate(null);
           setShowProfileManager(false);
           return;
         }
+        console.log(`Switching to profile: ${profile}, trades available:`, trades[profile]);
         setCurrentProfile(profile);
-        setTrades(trades[profile] || {});
         setView('dashboard');
         setOvDate(null);
         setShowProfileManager(false);
+        // Ensure trades for the profile exist, fetch if missing
+        if (!trades[profile]) {
+          try {
+            const response = await fetch(`/api/get_data/${encodeURIComponent(profile)}`, {
+              signal: AbortSignal.timeout(10000),
+            });
+            if (!response.ok) {
+              throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            const data = await response.json();
+            setTrades((prev) => ({
+              ...prev,
+              [profile]: data.trades || {},
+            }));
+            setTagsState((prev) => [...new Set([...prev, ...(data.tags || [])])]);
+            setStrategies((prev) => [...new Set([...prev, ...(data.strategies || [])])]);
+            saveToSessionStorage({
+              profiles,
+              currentProfile: profile,
+              trades: { ...trades, [profile]: data.trades || {} },
+              tags: [...new Set([...tagsState, ...(data.tags || [])])],
+              strategies: [...new Set([...strategies, ...(data.strategies || [])])],
+            });
+          } catch (error) {
+            console.error(`Error fetching data for profile ${profile}:`, error);
+            setTrades((prev) => ({ ...prev, [profile]: {} }));
+          }
+        }
       };
 
       const handleRenameProfile = async () => {

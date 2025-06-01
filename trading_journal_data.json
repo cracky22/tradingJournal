@@ -1,81 +1,6 @@
 {
   "profiles": {
     "Profile 1": {
-      "trades": {
-        "2025-05-31": [
-          {
-            "date": "2025-05-31",
-            "image": null,
-            "market": "NASDAQ",
-            "profitLossDollar": 123,
-            "reason": "",
-            "riskReward": 123,
-            "stars": 0,
-            "strategies": [
-              ""
-            ],
-            "strategy": "",
-            "tags": [],
-            "tradeDuration": 123,
-            "tradeType": "Long"
-          },
-          {
-            "date": "2025-05-31",
-            "image": null,
-            "market": "NASDAQ",
-            "profitLossDollar": 234,
-            "reason": "",
-            "riskReward": 234,
-            "stars": 0,
-            "strategies": [
-              ""
-            ],
-            "strategy": "",
-            "tags": [],
-            "tradeDuration": 234,
-            "tradeType": "Long"
-          },
-          {
-            "date": "2025-05-31",
-            "image": null,
-            "market": "NASDAQ",
-            "profitLossDollar": 345,
-            "reason": "",
-            "riskReward": 345,
-            "stars": 0,
-            "strategies": [
-              ""
-            ],
-            "strategy": "",
-            "tags": [],
-            "tradeDuration": 345,
-            "tradeType": "Long"
-          },
-          {
-            "date": "2025-05-31",
-            "image": null,
-            "market": "NASDAQ",
-            "profitLossDollar": 456,
-            "reason": "",
-            "riskReward": 456,
-            "stars": 0,
-            "strategies": [
-              ""
-            ],
-            "strategy": "",
-            "tags": [],
-            "tradeDuration": 456,
-            "tradeType": "Long"
-          }
-        ]
-      },
-      "tags": [],
-      "strategies": [],
-      "profilesList": [
-        "Profile 1"
-      ]
-    },
-    "Profile 2": {
       "trades": {},
       "tags": [],
       "strategies": [
@@ -85,87 +10,51 @@
         "Sweep",
         "Range",
         "RAIN"
-      ],
-      "profilesList": [
-        "Profile 1",
-        "Profile 2"
       ]
     },
-    "Profile": {
+    "Profile 2": {
       "trades": {
-        "2025-05-31": [
+        "2025-06-01": [
           {
-            "date": "2025-05-31",
-            "image": null,
+            "date": "2025-06-01",
             "market": "NASDAQ",
-            "profitLossDollar": 123,
-            "reason": "",
+            "tradeType": "Long",
             "riskReward": 123,
-            "stars": 0,
+            "strategy": "Trendfolge",
             "strategies": [
-              ""
+              "Trendfolge"
             ],
-            "strategy": "",
-            "tags": [],
+            "profitLossDollar": 123,
             "tradeDuration": 123,
-            "tradeType": "Long"
-          },
-          {
-            "date": "2025-05-31",
-            "image": null,
-            "market": "NASDAQ",
-            "profitLossDollar": 234,
             "reason": "",
-            "riskReward": 234,
             "stars": 0,
-            "strategies": [
-              ""
-            ],
-            "strategy": "",
-            "tags": [],
-            "tradeDuration": 234,
-            "tradeType": "Long"
-          },
-          {
-            "date": "2025-05-31",
             "image": null,
-            "market": "NASDAQ",
-            "profitLossDollar": 345,
-            "reason": "",
-            "riskReward": 345,
-            "stars": 0,
-            "strategies": [
-              ""
-            ],
-            "strategy": "",
-            "tags": [],
-            "tradeDuration": 345,
-            "tradeType": "Long"
-          },
-          {
-            "date": "2025-05-31",
-            "image": null,
-            "market": "NASDAQ",
-            "profitLossDollar": 456,
-            "reason": "",
-            "riskReward": 456,
-            "stars": 0,
-            "strategies": [
-              ""
-            ],
-            "strategy": "",
-            "tags": [],
-            "tradeDuration": 456,
-            "tradeType": "Long"
+            "tags": []
           }
         ]
       },
       "tags": [],
-      "strategies": [],
-      "profilesList": [
-        "Profile"
+      "strategies": [
+        "Trendfolge",
+        "Volumen",
+        "Fibonacci",
+        "Sweep",
+        "Range",
+        "RAIN"
+      ]
+    },
+    "Profile": {
+      "trades": {},
+      "tags": [],
+      "strategies": [
+        "Trendfolge",
+        "Volumen",
+        "Fibonacci",
+        "Sweep",
+        "Range",
+        "RAIN"
       ]
     }
   },
-  "currentProfile": "Profile 1"
+  "currentProfile": "Profile 2"
 }
