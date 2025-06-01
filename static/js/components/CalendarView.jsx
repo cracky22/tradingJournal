@@ -6,10 +6,13 @@ function CalendarView({
   const [selectedImage, setSelectedImage] = useState(null);
 
   const getCalendarDays = () => {
+    console.log(`[getCalendarDays] Generating calendar for year=${y}, month=${m}`);
     const firstDay = new Date(y, m, 1);
     const lastDay = new Date(y, m + 1, 0);
     const startDay = firstDay.getDay() || 7;
     const totalDays = lastDay.getDate();
+    console.log(`[getCalendarDays] firstDay: ${firstDay}, lastDay: ${lastDay}, startDay: ${startDay}, totalDays: ${totalDays}`);
+
     const days = [];
 
     for (let i = 1; i < startDay; i++) {
@@ -18,41 +21,54 @@ function CalendarView({
 
     for (let i = 1; i <= totalDays; i++) {
       const dateStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-      days.push({ date: dateStr, profit: gp(dateStr) });
+      const profit = gp(dateStr);
+      console.log(`[getCalendarDays] Adding day ${dateStr} with profit ${profit}`);
+      days.push({ date: dateStr, profit });
     }
 
+    console.log(`[getCalendarDays] Total days generated: ${days.length}`);
     return days;
   };
 
   const handlePrevMonth = () => {
+    console.log(`[handlePrevMonth] Current month: ${m}, year: ${y}`);
     if (m === 0) {
+      console.log('[handlePrevMonth] Switching to December of previous year');
       sm(11);
       sy(y - 1);
     } else {
+      console.log(`[handlePrevMonth] Switching to month: ${m - 1}`);
       sm(m - 1);
     }
   };
 
   const handleNextMonth = () => {
+    console.log(`[handleNextMonth] Current month: ${m}, year: ${y}`);
     if (m === 11) {
+      console.log('[handleNextMonth] Switching to January of next year');
       sm(0);
       sy(y + 1);
     } else {
+      console.log(`[handleNextMonth] Switching to month: ${m + 1}`);
       sm(m + 1);
     }
   };
 
   const handleDayClick = (date) => {
+    console.log(`[handleDayClick] Day clicked: ${date}`);
     sd(date);
     so(date); // Nur das Datum setzen
   };
 
   const openImageViewer = (imageSrc) => {
+    console.log(`[openImageViewer] Opening image viewer for image source: ${imageSrc.substring(0, 30)}...`);
     setSelectedImage(imageSrc);
   };
 
   const closeImageViewer = (e) => {
+    console.log(`[closeImageViewer] Event target class: ${e.target.className}`);
     if (e.target === e.currentTarget || e.target.className.includes('close')) {
+      console.log('[closeImageViewer] Closing image viewer');
       setSelectedImage(null);
     }
   };
@@ -64,7 +80,9 @@ function CalendarView({
 
   // Use the current date as default if no day is selected
   const currentDate = d || `${y}-${String(m + 1).padStart(2, '0')}-${String(new Date(y, m, 1).getDate()).padStart(2, '0')}`;
+  console.log(`[render] Current date for trades: ${currentDate}`);
   const dayTrades = t[currentDate] || [];
+  console.log(`[render] Number of trades on ${currentDate}: ${dayTrades.length}`);
 
   return (
     <div className="bg-gray-800 p-6 rounded-lg shadow-lg relative">
@@ -98,7 +116,14 @@ function CalendarView({
         {getCalendarDays().map((day, index) => (
           <div
             key={index}
-            onClick={() => day && handleDayClick(day.date)}
+            onClick={() => {
+              if (day) {
+                console.log(`[CalendarDay] Clicked day: ${day.date}, profit: ${day.profit}`);
+                handleDayClick(day.date);
+              } else {
+                console.log(`[CalendarDay] Clicked empty day slot at index: ${index}`);
+              }
+            }}
             className={`p-2 text-center rounded-lg transition-colors ${
               day
                 ? day.profit !== 0
@@ -138,6 +163,8 @@ function CalendarView({
               trade.image && !trade.image.startsWith('data:image')
                 ? `data:image/png;base64,${trade.image}`
                 : trade.image;
+
+            console.log(`[trade ${index}] Market: ${trade.market}, Profit/Loss: ${trade.profitLossDollar}, Has image: ${hasValidImage}`);
 
             return (
               <div
