@@ -13,6 +13,7 @@ from flask_cors import CORS
 from waitress import serve
 import threading
 from os import environ
+import base64
 
 DATA_FILE = environ.get('TRADING_JOURNAL_DATA_FILE', 'trading_journal_data.json')
 HOST = environ.get('TRADING_JOURNAL_HOST', 'localhost')
@@ -134,7 +135,7 @@ def get_data(profile_name):
         modified_trades = {}
         for date, trade_list in trades.items():
             modified_trades[date] = [
-                {**trade, 'image': None, 'imageRef': trade.get('imageRef') is not None}
+                {**trade, 'image': trade.get('image'), 'imageRef': None}
                 for trade in trade_list
             ]
         
@@ -160,15 +161,11 @@ def get_image(profile_name, date, index):
             return jsonify({'error': 'Invalid trade index'}), 404
         
         trade = trades[index]
-        image_ref = trade.get('imageRef')
-        if not image_ref:
+        image_data = trade.get('image')
+        if not image_data:
             return jsonify({'error': 'No image for this trade'}), 404
         
-        image_path = os.path.join(app.config['UPLOAD_FOLDER'], f"{image_ref}.png")
-        if not os.path.exists(image_path):
-            return jsonify({'error': 'Image file not found'}), 404
-        
-        return send_file(image_path, mimetype='image/png')
+        return jsonify({'image': image_data})
     except Exception as e:
         logger.error(f"Error fetching image for profile {profile_name}, date {date}, index {index}: {str(e)}")
         return jsonify({'error': 'Failed to fetch image'}), 500
@@ -199,20 +196,14 @@ def upload_image():
         if index < 0 or index > len(trades):
             return jsonify({'error': 'Invalid trade index'}), 400
         
-        # Generate a unique filename based on imageRef or date-index
-        image_ref = f"{date}-{index}"
-        filename = f"{image_ref}.png"
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        # Convert image to base64
+        image_data = base64.b64encode(file.read()).decode('utf-8')
         
-        # Save the file
-        file.save(file_path)
-        logger.info(f"Uploaded image to {file_path}")
-        
-        # Update trade with imageRef if it exists, or add new trade
+        # Update trade with image data
         if index < len(trades):
-            trades[index]['imageRef'] = image_ref
+            trades[index]['image'] = image_data
         else:
-            trade = {'date': date, 'imageRef': image_ref}  # Minimal trade data
+            trade = {'date': date, 'image': image_data}
             trades.append(trade)
         
         profile_data['trades'] = profile_data.get('trades', {})
@@ -220,7 +211,7 @@ def upload_image():
         data['profiles'][profile] = profile_data
         save_data(data)
         
-        return jsonify({'message': 'Image uploaded successfully', 'imageRef': image_ref})
+        return jsonify({'message': 'Image uploaded successfully', 'image': image_data})
     except Exception as e:
         logger.error(f"Error uploading image: {str(e)}")
         return jsonify({'error': 'Failed to upload image'}), 500
