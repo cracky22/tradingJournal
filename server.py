@@ -23,6 +23,7 @@ LOG_FILE = environ.get('TRADING_JOURNAL_LOG_FILE', 'backend.log')
 LAST_LOG_FILE = environ.get('TRADING_JOURNAL_LAST_LOG_FILE', 'last.log')
 MAX_LOG_SIZE = int(environ.get('TRADING_JOURNAL_MAX_LOG_SIZE', 10 * 1024 * 1024))  # 10 MB
 BACKUP_COUNT = int(environ.get('TRADING_JOURNAL_LOG_BACKUP_COUNT', 5))
+UPLOAD_FOLDER = environ.get('TRADING_JOURNAL_UPLOAD_FOLDER', 'static/images')
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -41,6 +42,9 @@ logger.addHandler(last_log_handler)
 
 app = Flask(__name__)
 CORS(app)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
 
 REQUEST_LIMIT = 100
 REQUEST_WINDOW = 60
@@ -157,7 +161,7 @@ def get_data(profile_name):
         modified_trades = {}
         for date, trade_list in trades.items():
             modified_trades[date] = [
-                {**trade, 'image': None, 'imageRef': trade.get('image') is not None}
+                {**trade, 'image': None, 'imageRef': trade.get('imageRef') is not None}
                 for trade in trade_list
             ]
         
@@ -186,14 +190,73 @@ def get_image(profile_name, date, index):
             return jsonify({'error': 'Invalid trade index'}), 404
         
         trade = trades[index]
-        image = trade.get('image')
-        if not image:
+        image_ref = trade.get('imageRef')
+        if not image_ref:
             return jsonify({'error': 'No image for this trade'}), 404
         
-        return jsonify({'image': image})
+        image_path = os.path.join(app.config['UPLOAD_FOLDER'], f"{image_ref}.png")
+        if not os.path.exists(image_path):
+            return jsonify({'error': 'Image file not found'}), 404
+        
+        return send_file(image_path, mimetype='image/png')
     except Exception as e:
         logger.error(f"Error fetching image for profile {profile_name}, date {date}, index {index}: {str(e)}")
         return jsonify({'error': 'Failed to fetch image'}), 500
+
+@app.route('/api/upload_image', methods=['POST'])
+def upload_image():
+    ip = request.remote_addr
+    if not check_rate_limit(ip):
+        return jsonify({'error': 'Rate limit exceeded'}), 429
+    try:
+        if 'image' not in request.files:
+            return jsonify({'error': 'No image file provided'}), 400
+        
+        file = request.files['image']
+        if file.filename == '':
+            return jsonify({'error': 'No selected file'}), 400
+        
+        profile = request.form.get('profile')
+        date = request.form.get('date')
+        index = request.form.get('index')
+        
+        if not all([profile, date, index]):
+            return jsonify({'error': 'Missing profile, date, or index'}), 400
+        
+        index = int(index)
+        
+        data = load_data()
+        profile_data = data.get('profiles', {}).get(profile, {})
+        trades = profile_data.get('trades', {}).get(date, [])
+        
+        if index < 0 or index > len(trades):
+            return jsonify({'error': 'Invalid trade index'}), 400
+        
+        # Generate a unique filename based on imageRef or date-index
+        image_ref = f"{date}-{index}"
+        filename = f"{image_ref}.png"
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        
+        # Save the file
+        file.save(file_path)
+        logger.info(f"Uploaded image to {file_path}")
+        
+        # Update trade with imageRef if it exists, or add new trade
+        if index < len(trades):
+            trades[index]['imageRef'] = image_ref
+        else:
+            trade = {'date': date, 'imageRef': image_ref}  # Minimal trade data
+            trades.append(trade)
+        
+        profile_data['trades'] = profile_data.get('trades', {})
+        profile_data['trades'][date] = trades
+        data['profiles'][profile] = profile_data
+        save_data(data)
+        
+        return jsonify({'message': 'Image uploaded successfully', 'imageRef': image_ref})
+    except Exception as e:
+        logger.error(f"Error uploading image: {str(e)}")
+        return jsonify({'error': 'Failed to upload image'}), 500
 
 @app.route('/api/submit_data', methods=['POST'])
 def submit_data():
