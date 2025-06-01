@@ -120,6 +120,21 @@ def save_data(data):
             logger.info(f"Restored backup: {backup_file}")
         raise
 
+@app.route('/', methods=['GET'])
+def serve_index():
+    ip = request.remote_addr
+    if not check_rate_limit(ip):
+        return jsonify({'error': 'Rate limit exceeded'}), 429
+    try:
+        index_path = os.path.join('static', 'index.html')
+        if not os.path.exists(index_path):
+            logger.error(f"index.html not found at {index_path}")
+            return jsonify({'error': 'index.html not found'}), 404
+        return send_file(index_path)
+    except Exception as e:
+        logger.error(f"Error serving index.html: {str(e)}")
+        return jsonify({'error': 'Failed to serve index.html'}), 500
+
 @app.route('/api/get_profiles', methods=['GET'])
 def get_profiles():
     ip = request.remote_addr
