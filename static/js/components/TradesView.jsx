@@ -31,24 +31,31 @@ function TradesView({
 
   // Load trades for the selected date directly from props
   const dayTrades = t[d] || [];
+  console.log(`[TradesView] Loaded trades for date ${d}:`, dayTrades);
 
   // Preload images from trade data
   useEffect(() => {
+    console.log("[TradesView] Preloading images for dayTrades", dayTrades);
     const newImages = {};
     dayTrades.forEach((trade, i) => {
       const key = `${d}-${i}`;
       if (trade.image && !(key in images)) {
         newImages[key] = `data:image/png;base64,${trade.image}`;
+        console.log(`[TradesView] Preloading image for trade ${key}`);
       }
     });
     if (Object.keys(newImages).length > 0) {
       setImages((prev) => ({ ...prev, ...newImages }));
+      console.log("[TradesView] Images updated with new preloaded images:", newImages);
+    } else {
+      console.log("[TradesView] No new images to preload");
     }
   }, [dayTrades, d]);
 
   // Populate form for editing
   useEffect(() => {
     if (edit !== null && dayTrades[edit]) {
+      console.log(`[TradesView] Editing trade index ${edit}`, dayTrades[edit]);
       setFormData({
         market: dayTrades[edit].market || "",
         profitLossDollar: dayTrades[edit].profitLossDollar || "",
@@ -59,6 +66,7 @@ function TradesView({
         image: null,
       });
     } else {
+      console.log("[TradesView] Resetting form for new trade");
       setFormData({
         market: "",
         profitLossDollar: "",
@@ -73,6 +81,7 @@ function TradesView({
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    console.log(`[TradesView] Input changed - ${name}: ${value}`);
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -81,40 +90,53 @@ function TradesView({
       const newTags = prev.tags.includes(tag)
         ? prev.tags.filter((t) => t !== tag)
         : [...prev.tags, tag];
+      console.log(`[TradesView] Tag ${tag} toggled. New tags:`, newTags);
       return { ...prev, tags: newTags };
     });
   };
 
   const handleAddTag = () => {
     const trimmedTag = newTag.trim();
+    console.log(`[TradesView] Adding new tag: "${trimmedTag}"`);
     if (trimmedTag && !tg.includes(trimmedTag)) {
       ag(trimmedTag);
       setFormData((prev) => ({ ...prev, tags: [...prev.tags, trimmedTag] }));
       setNewTag("");
+      console.log(`[TradesView] Tag "${trimmedTag}" added.`);
     } else if (tg.includes(trimmedTag)) {
+      console.warn(`[TradesView] Tag "${trimmedTag}" already exists.`);
       alert("Tag already exists.");
     }
   };
 
   const handleDeleteTag = (tag) => {
+    console.log(`[TradesView] Request to delete tag "${tag}"`);
     if (window.confirm(`Are you sure you want to delete the tag "${tag}"?`)) {
       dg(tag);
       setFormData((prev) => ({
         ...prev,
         tags: prev.tags.filter((t) => t !== tag),
       }));
+      console.log(`[TradesView] Tag "${tag}" deleted.`);
+    } else {
+      console.log(`[TradesView] Deletion of tag "${tag}" cancelled.`);
     }
   };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      console.log("[TradesView] Image file selected:", file.name, file.size, file.type);
       setFormData((prev) => ({ ...prev, image: file }));
+    } else {
+      console.log("[TradesView] No image file selected.");
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log("[TradesView] Submitting trade with formData:", formData);
+
     const trade = {
       date: d,
       market: formData.market,
@@ -126,8 +148,11 @@ function TradesView({
       image: formData.image ? await convertImageToBase64(formData.image) : null,
     };
 
+    console.log("[TradesView] Prepared trade object:", trade);
+
     try {
       if (formData.image) {
+        console.log("[TradesView] Uploading image to server...");
         const formDataToSend = new FormData();
         formDataToSend.append("image", formData.image);
         formDataToSend.append("profile", cp);
@@ -139,15 +164,23 @@ function TradesView({
           body: formDataToSend,
           signal: AbortSignal.timeout(10000),
         });
+
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
+          console.error("[TradesView] Image upload failed:", errorData);
           throw new Error(errorData.error || "Failed to upload image");
+        } else {
+          console.log("[TradesView] Image upload successful");
         }
+      } else {
+        console.log("[TradesView] No image to upload");
       }
 
       if (edit !== null) {
+        console.log(`[TradesView] Updating trade at index ${edit}`);
         ut(d, edit, trade);
       } else {
+        console.log("[TradesView] Adding new trade");
         at(trade);
       }
 
@@ -161,23 +194,30 @@ function TradesView({
         tradeDuration: "",
         image: null,
       });
+      console.log("[TradesView] Form reset after submit");
     } catch (error) {
-      console.error("Error submitting trade:", error);
+      console.error("[TradesView] Error submitting trade:", error);
       alert(`Failed to submit trade: ${error.message || "Network error"}`);
     }
   };
 
   const handleEdit = (index) => {
+    console.log(`[TradesView] Edit requested for trade index ${index}`);
     setEdit(index);
   };
 
   const handleDelete = (index) => {
+    console.log(`[TradesView] Delete requested for trade index ${index}`);
     if (window.confirm("Are you sure you want to delete this trade?")) {
       dt(d, index);
+      console.log(`[TradesView] Trade at index ${index} deleted.`);
+    } else {
+      console.log("[TradesView] Trade deletion cancelled.");
     }
   };
 
   const handleCancel = () => {
+    console.log("[TradesView] Cancel editing");
     setEdit(null);
     setFormData({
       market: "",
@@ -192,20 +232,30 @@ function TradesView({
 
   // Helper function to convert image to base64
   const convertImageToBase64 = (file) => {
+    console.log("[TradesView] Converting image file to base64");
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result.split(',')[1]); // Remove data URL prefix
-      reader.onerror = reject;
+      reader.onloadend = () => {
+        const base64 = reader.result.split(",")[1]; // Remove data URL prefix
+        console.log("[TradesView] Image converted to base64");
+        resolve(base64);
+      };
+      reader.onerror = (error) => {
+        console.error("[TradesView] Error converting image to base64:", error);
+        reject(error);
+      };
       reader.readAsDataURL(file);
     });
   };
 
   const openImageViewer = (imageSrc) => {
+    console.log("[TradesView] Opening image viewer");
     setSelectedImage(imageSrc);
   };
 
   const closeImageViewer = (e) => {
-    if (e.target === e.currentTarget || e.target.className.includes('close')) {
+    if (e.target === e.currentTarget || e.target.className.includes("close")) {
+      console.log("[TradesView] Closing image viewer");
       setSelectedImage(null);
     }
   };
@@ -248,9 +298,7 @@ function TradesView({
             />
           </div>
           <div>
-            <label className="block text-gray-400 mb-1">
-              Trade Duration (min)
-            </label>
+            <label className="block text-gray-400 mb-1">Trade Duration (min)</label>
             <input
               type="number"
               name="tradeDuration"
@@ -292,84 +340,70 @@ function TradesView({
             </select>
           </div>
           <div>
+            <label className="block text-gray-400 mb-1">Tags</label>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {tg.map((tag) => (
+                <span
+                  key={tag}
+                  onClick={() => handleTagChange(tag)}
+                  className={`inline-block px-3 py-1 rounded-full cursor-pointer select-none ${
+                    formData.tags.includes(tag)
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-600 text-gray-300"
+                  }`}
+                  title={`Click to ${formData.tags.includes(tag) ? "remove" : "add"} tag`}
+                >
+                  {tag}{" "}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteTag(tag);
+                    }}
+                    className="ml-1 text-red-400 hover:text-red-600 font-bold"
+                    aria-label={`Delete tag ${tag}`}
+                  >
+                    &times;
+                  </button>
+                </span>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newTag}
+                onChange={(e) => setNewTag(e.target.value)}
+                placeholder="New tag"
+                className="p-2 bg-gray-600 border border-gray-500 rounded-lg text-gray-200 flex-grow focus:outline-none focus:ring-2 focus:ring-blue-500 smooth-transition"
+              />
+              <button
+                onClick={handleAddTag}
+                className="bg-green-600 text-white px-4 rounded-lg hover:bg-green-700 transition"
+              >
+                Add Tag
+              </button>
+            </div>
+          </div>
+          <div>
             <label className="block text-gray-400 mb-1">Image</label>
             <input
               type="file"
               accept="image/*"
               onChange={handleImageChange}
-              className="w-full p-2 bg-gray-600 border border-gray-500 rounded-lg text-gray-200"
+              className="w-full text-gray-200"
             />
           </div>
         </div>
-        <div className="mt-4">
-          <label className="block text-gray-400 mb-1">Tags</label>
-          <div className="flex flex-wrap gap-2 mb-2">
-            {tg.map((tag) => (
-              <span
-                key={tag}
-                onClick={() => handleTagChange(tag)}
-                className={`px-2 py-1 rounded-lg cursor-pointer smooth-transition ${
-                  formData.tags.includes(tag)
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-600 text-gray-200"
-                }`}
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={newTag}
-              onChange={(e) => setNewTag(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleAddTag()}
-              placeholder="New tag"
-              className="flex-grow p-2 bg-gray-600 border border-gray-500 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 smooth-transition"
-            />
-            <button
-              onClick={handleAddTag}
-              disabled={!newTag.trim()}
-              className={`px-4 py-2 text-white rounded-lg smooth-transition ${
-                newTag.trim()
-                  ? "bg-blue-600 hover:bg-blue-700"
-                  : "bg-gray-600 cursor-not-allowed"
-              }`}
-            >
-              Add Tag
-            </button>
-          </div>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {tg.map((tag) => (
-              <span
-                key={tag}
-                className="px-2 py-1 bg-gray-600 text-gray-200 rounded-lg flex items-center"
-              >
-                {tag}
-                <button
-                  onClick={() => handleDeleteTag(tag)}
-                  className="ml-2 text-red-400 hover:text-red-600"
-                >
-                  ×
-                </button>
-              </span>
-            ))}
-          </div>
-        </div>
-        <div className="mt-4 flex gap-2">
+        <div className="mt-4 flex gap-4">
           <button
             onClick={handleSubmit}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 smooth-transition"
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
           >
             {edit !== null ? "Update Trade" : "Add Trade"}
           </button>
-          {(edit !== null ||
-            formData.market ||
-            formData.profitLossDollar ||
-            formData.tags.length > 0) && (
+          {edit !== null && (
             <button
               onClick={handleCancel}
-              className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 smooth-transition"
+              className="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition"
             >
               Cancel
             </button>
@@ -377,104 +411,81 @@ function TradesView({
         </div>
       </div>
 
-      {/* Trades List */}
-      {dayTrades.length === 0 ? (
-        <p className="text-gray-400">No trades for this day.</p>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-gray-200">
-            <thead>
-              <tr className="bg-gray-700">
-                <th className="p-3">Market</th>
-                <th className="p-3">Profit/Loss ($)</th>
-                <th className="p-3">Tags</th>
-                <th className="p-3">Stars</th>
-                <th className="p-3">Strategy</th>
-                <th className="p-3">Duration (min)</th>
-                <th className="p-3">Image</th>
-                <th className="p-3">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {dayTrades.map((trade, index) => {
-                const imageKey = `${d}-${index}`;
-                const imageSrc = trade.image ? `data:image/png;base64,${trade.image}` : null;
-                return (
-                  <tr
-                    key={imageKey}
-                    className="border-t border-gray-600 hover:bg-gray-700"
-                  >
-                    <td className="p-3">{trade.market || "N/A"}</td>
-                    <td
-                      className="p-3"
-                      style={{
-                        color:
-                          trade.profitLossDollar >= 0 ? "#22c55e" : "#ef4444",
-                      }}
+      {/* List of Trades */}
+      <div>
+        {dayTrades.length === 0 ? (
+          <p className="text-gray-400">No trades for this date.</p>
+        ) : (
+          dayTrades.map((trade, index) => {
+            const key = `${d}-${index}`;
+            const imgSrc = images[key] || (trade.image ? `data:image/png;base64,${trade.image}` : null);
+            return (
+              <div
+                key={key}
+                className="mb-4 p-4 bg-gray-700 rounded-lg shadow cursor-pointer hover:bg-gray-600"
+              >
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h4 className="text-white font-semibold">{trade.market || "Unknown Market"}</h4>
+                    <p className="text-gray-300">
+                      P/L: ${trade.profitLossDollar?.toFixed(2) ?? "0.00"} | Duration: {trade.tradeDuration ?? "-"} min | Stars: {trade.stars}
+                    </p>
+                    <p className="text-gray-300">Strategy: {trade.strategy || "None"}</p>
+                    <p className="text-gray-300">
+                      Tags:{" "}
+                      {trade.tags && trade.tags.length > 0 ? trade.tags.join(", ") : "None"}
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    {imgSrc && (
+                      <img
+                        src={imgSrc}
+                        alt="Trade"
+                        className="w-16 h-16 object-cover rounded cursor-pointer border border-gray-500"
+                        onClick={() => openImageViewer(imgSrc)}
+                      />
+                    )}
+                    <button
+                      onClick={() => handleEdit(index)}
+                      className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded"
+                      title="Edit trade"
                     >
-                      {trade.profitLossDollar?.toFixed(2) || "0.00"}
-                    </td>
-                    <td className="p-3">{trade.tags?.join(", ") || "None"}</td>
-                    <td className="p-3">{trade.stars || 0} ⭐</td>
-                    <td className="p-3">{trade.strategy || "N/A"}</td>
-                    <td className="p-3">{trade.tradeDuration || "N/A"}</td>
-                    <td className="p-3">
-                      {!trade.image ? (
-                        "No Image"
-                      ) : imageSrc ? (
-                        <img
-                          src={imageSrc}
-                          alt="Trade screenshot"
-                          className="w-16 h-16 object-cover rounded cursor-pointer"
-                          onClick={() => openImageViewer(imageSrc)}
-                          onError={() => {
-                            console.error(`Failed to load image for ${imageKey}`);
-                          }}
-                        />
-                      ) : (
-                        "Image Not Found"
-                      )}
-                    </td>
-                    <td className="p-3 flex gap-2">
-                      <button
-                        onClick={() => handleEdit(index)}
-                        className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 smooth-transition"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(index)}
-                        className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 smooth-transition"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(index)}
+                      className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded"
+                      title="Delete trade"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
 
-      {/* Image Viewer */}
+      {/* Image Viewer Modal */}
       {selectedImage && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
+          className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50"
           onClick={closeImageViewer}
         >
-          <div className="relative">
+          <div className="relative max-w-4xl max-h-full p-4">
+            <button
+              onClick={closeImageViewer}
+              className="absolute top-2 right-2 text-white text-3xl font-bold cursor-pointer"
+              aria-label="Close image viewer"
+            >
+              &times;
+            </button>
             <img
               src={selectedImage}
-              alt="Full-size trade screenshot"
-              className="max-h-[90vh] max-w-[90vw] object-contain"
+              alt="Full view"
+              className="max-w-full max-h-screen rounded-lg shadow-lg"
             />
-            <button
-              className="absolute top-2 right-2 text-white text-2xl close"
-              onClick={closeImageViewer}
-            >
-              ×
-            </button>
           </div>
         </div>
       )}
