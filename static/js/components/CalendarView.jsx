@@ -1,4 +1,4 @@
-const { useState, useEffect } = React;
+const { useState } = React;
 
 function CalendarView({
   t, d, sd, gp, m, y, sm, sy, so
@@ -42,7 +42,7 @@ function CalendarView({
 
   const handleDayClick = (date) => {
     sd(date);
-    so(date); // => das ruft vermutlich die DayOverview-Komponente auf
+    so(date);
   };
 
   const monthNames = [
@@ -116,38 +116,41 @@ function CalendarView({
         <div className="mt-6">
           <h3 className="text-lg font-semibold text-gray-300 mb-2">Trades on {d}</h3>
           <div className="space-y-2">
-            {dayTrades.map((trade, index) => (
-              <div
-                key={index}
-                className="bg-gray-700 p-3 rounded-lg shadow flex justify-between items-center"
-              >
-                <div>
-                  <p className="text-white">
-                    {trade.market || 'N/A'} - ${trade.profitLossDollar?.toFixed(2) || '0.00'}
-                  </p>
-                  <p className="text-gray-400 text-sm">{trade.strategy || 'N/A'}</p>
+            {dayTrades.map((trade, index) => {
+              const hasValidImage =
+                trade.image &&
+                (trade.image.startsWith('data:image') || /^[A-Za-z0-9+/=]+$/.test(trade.image));
 
-                  {trade.image ? (
-                    <img
-                      src={
-                        trade.image.startsWith('data:image')
-                          ? trade.image
-                          : `data:image/png;base64,${trade.image}`
-                      }
-                      alt="Trade screenshot"
-                      className="w-16 h-16 object-cover rounded mt-2"
-                      onError={() =>
-                        console.error(`Image failed to load for trade ${index} on ${d}`)
-                      }
-                    />
-                  ) : (
-                    <div className="w-16 h-16 bg-gray-600 flex items-center justify-center rounded mt-2 text-white text-xs">
-                      No Image
-                    </div>
-                  )}
+              return (
+                <div
+                  key={index}
+                  className="bg-gray-700 p-3 rounded-lg shadow flex justify-between items-center"
+                >
+                  <div>
+                    <p className="text-white">
+                      {trade.market || 'N/A'} - ${trade.profitLossDollar?.toFixed(2) || '0.00'}
+                    </p>
+                    <p className="text-gray-400 text-sm">{trade.strategy || 'N/A'}</p>
+
+                    {hasValidImage ? (
+                      <img
+                        src={
+                          trade.image.startsWith('data:image')
+                            ? trade.image
+                            : `data:image/png;base64,${trade.image}`
+                        }
+                        alt="Trade screenshot"
+                        className="w-16 h-16 object-cover rounded mt-2"
+                      />
+                    ) : (
+                      <div className="w-16 h-16 bg-gray-600 flex items-center justify-center rounded mt-2 text-white text-xs">
+                        No Image
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
