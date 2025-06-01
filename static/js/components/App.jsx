@@ -63,10 +63,13 @@ function App() {
       });
       if (!profilesResponse.ok) {
         const data = await profilesResponse.json().catch(() => {});
-        throw new Error(data.error || `HTTP error! Status: ${profilesResponse.status}`);
+        throw new Error(
+          data.error || `HTTP error! Status: ${profilesResponse.status}`
+        );
       }
       const { profiles: profilesList } = await profilesResponse.json();
-      const profilesData = profilesList.length > 0 ? profilesList : ["Profile 1"];
+      const profilesData =
+        profilesList.length > 0 ? profilesList : ["Profile 1"];
 
       setProfiles(profilesData);
       setCurrentProfile(profilesData[0] || "Profile 1");
@@ -87,12 +90,16 @@ function App() {
         );
         if (!response.ok) {
           const data = await response.json().catch(() => {});
-          throw new Error(data.error || `HTTP error! Status: ${response.status}`);
+          throw new Error(
+            data.error || `HTTP error! Status: ${response.status}`
+          );
         }
         const data = await response.json();
         allData.trades[profile] = data.trades || {};
         allData.tags = [...new Set([...allData.tags, ...(data.tags || [])])];
-        allData.strategies = [...new Set([...allData.strategies, ...(data.strategies || [])])];
+        allData.strategies = [
+          ...new Set([...allData.strategies, ...(data.strategies || [])]),
+        ];
       }
 
       saveToSessionStorage(allData);
@@ -145,7 +152,9 @@ function App() {
       const parallaxBg = document.querySelector(".parallax-bg");
       const scrollPosition = window.pageYOffset;
       if (parallaxBg) {
-        parallaxBg.style.transform = `translate3d(0, ${scrollPosition * 0.5}px, 0)`;
+        parallaxBg.style.transform = `translate3d(0, ${
+          scrollPosition * 0.5
+        }px, 0)`;
       }
     }, 16);
 

@@ -13,8 +13,8 @@ function ProfilesView({ loadProfiles }) {
       setProfiles(profilesData);
       setIsLoading(false);
     } catch (err) {
-      console.error('Fehler beim Laden der Profile:', err);
-      setError('Fehler beim Laden der Profile. Bitte versuche es erneut.');
+      console.error("Fehler beim Laden der Profile:", err);
+      setError("Fehler beim Laden der Profile. Bitte versuche es erneut.");
       setIsLoading(false);
     }
   };
@@ -52,8 +52,10 @@ function ProfilesView({ loadProfiles }) {
         <div className="space-y-4">
           {profiles.map((profile, index) => (
             <div key={index} className="bg-gray-700 p-4 rounded-lg shadow">
-              <p className="text-white">{profile.name || 'Unnamed Profile'}</p>
-              <p className="text-gray-400 text-sm">{profile.description || 'No description'}</p>
+              <p className="text-white">{profile.name || "Unnamed Profile"}</p>
+              <p className="text-gray-400 text-sm">
+                {profile.description || "No description"}
+              </p>
             </div>
           ))}
         </div>
