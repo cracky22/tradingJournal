@@ -12,9 +12,6 @@ from flask import Flask, send_file, request, jsonify
 from flask_cors import CORS
 from waitress import serve
 import threading
-from collections import defaultdict
-from time import time as timestamp
-
 from os import environ
 DATA_FILE = environ.get('TRADING_JOURNAL_DATA_FILE', 'trading_journal_data.json')
 HOST = environ.get('TRADING_JOURNAL_HOST', 'localhost')
@@ -46,24 +43,12 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
-REQUEST_LIMIT = 100
-REQUEST_WINDOW = 60
-request_counts = defaultdict(list)
-
 def format_file_size(size_bytes):
     for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
         if size_bytes < 1024:
             return f"{size_bytes:.1f} {unit}"
         size_bytes /= 1024
     return f"{size_bytes:.1f} PB"
-
-def check_rate_limit(ip):
-    now = timestamp()
-    request_counts[ip] = [t for t in request_counts[ip] if now - t < REQUEST_WINDOW]
-    if len(request_counts[ip]) >= REQUEST_LIMIT:
-        return False
-    request_counts[ip].append(now)
-    return True
 
 def validate_data(data):
     if not isinstance(data, dict):
@@ -122,9 +107,6 @@ def save_data(data):
 
 @app.route('/', methods=['GET'])
 def serve_index():
-    ip = request.remote_addr
-    if not check_rate_limit(ip):
-        return jsonify({'error': 'Rate limit exceeded'}), 429
     try:
         index_path = os.path.join('static', 'index.html')
         if not os.path.exists(index_path):
@@ -137,9 +119,6 @@ def serve_index():
 
 @app.route('/api/get_profiles', methods=['GET'])
 def get_profiles():
-    ip = request.remote_addr
-    if not check_rate_limit(ip):
-        return jsonify({'error': 'Rate limit exceeded'}), 429
     try:
         data = load_data()
         profiles = list(data.get('profiles', {}).keys()) or ['Profile 1']
@@ -150,9 +129,6 @@ def get_profiles():
 
 @app.route('/api/get_data/<profile_name>', methods=['GET'])
 def get_data(profile_name):
-    ip = request.remote_addr
-    if not check_rate_limit(ip):
-        return jsonify({'error': 'Rate limit exceeded'}), 429
     try:
         data = load_data()
         profile_data = data.get('profiles', {}).get(profile_name, {})
@@ -177,9 +153,6 @@ def get_data(profile_name):
 
 @app.route('/api/get_image/<profile_name>/<date>/<index>', methods=['GET'])
 def get_image(profile_name, date, index):
-    ip = request.remote_addr
-    if not check_rate_limit(ip):
-        return jsonify({'error': 'Rate limit exceeded'}), 429
     try:
         data = load_data()
         profile_data = data.get('profiles', {}).get(profile_name, {})
@@ -205,9 +178,6 @@ def get_image(profile_name, date, index):
 
 @app.route('/api/upload_image', methods=['POST'])
 def upload_image():
-    ip = request.remote_addr
-    if not check_rate_limit(ip):
-        return jsonify({'error': 'Rate limit exceeded'}), 429
     try:
         if 'image' not in request.files:
             return jsonify({'error': 'No image file provided'}), 400
@@ -260,9 +230,6 @@ def upload_image():
 
 @app.route('/api/submit_data', methods=['POST'])
 def submit_data():
-    ip = request.remote_addr
-    if not check_rate_limit(ip):
-        return jsonify({'error': 'Rate limit exceeded'}), 429
     try:
         data = request.get_json()
         valid, error = validate_data(data)
