@@ -27,7 +27,7 @@ function DashboardView({
 
   // Calculate statistics
   useEffect(() => {
-    const trades = gf();
+    const trades = gf() || [];
     const totalTrades = trades.length;
 
     // Total Profit/Loss
@@ -79,15 +79,15 @@ function DashboardView({
       maxDrawdown = Math.min(maxDrawdown, cumulative - peak);
     });
 
-    // Long Win Rate
-    const longTrades = trades.filter(trade => trade.direction === 'Long');
+    // Long Win Rate (with fallback if direction is missing)
+    const longTrades = trades.filter(trade => trade.direction === 'Long' || !trade.direction);
     const longWins = longTrades.filter(trade => (trade.profitLossDollar || 0) > 0);
     const longWinRate = longTrades.length > 0 ? (longWins.length / longTrades.length) * 100 : 0;
 
     // Short Win Rate
     const shortTrades = trades.filter(trade => trade.direction === 'Short');
     const shortWins = shortTrades.filter(trade => (trade.profitLossDollar || 0) > 0);
-    const shortWinRate = shortTrades.length > 0 ? (shortWins.length / shortTrades.length) * 100 : 0);
+    const shortWinRate = shortTrades.length > 0 ? (shortWins.length / shortTrades.length) * 100 : 0;
 
     setStats({
       totalProfitLoss,
@@ -113,7 +113,7 @@ function DashboardView({
       const ctx = profitChartRef.current.getContext('2d');
       profitChartInstance.current = new Chart(ctx, {
         type: 'line',
-        data: gc(gf()),
+        data: gc(gf() || []),
         options: {
           responsive: true,
           scales: {
@@ -126,6 +126,7 @@ function DashboardView({
               callbacks: {
                 label: (context) => `Profit: $${context.raw.y.toFixed(2)}, Date: ${context.raw.x}`
               }
+            }
           }
         }
       });
@@ -147,7 +148,7 @@ function DashboardView({
       const ctx = timePerfChartRef.current.getContext('2d');
       timePerfChartInstance.current = new Chart(ctx, {
         type: 'scatter',
-        data: gtp(gf()),
+        data: gtp(gf() || []),
         options: {
           responsive: true,
           scales: {
