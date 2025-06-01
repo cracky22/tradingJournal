@@ -24,13 +24,13 @@ function DayOverviewTrades({ trades, date, dt, fi, cp }) {
       <h3 className="text-lg font-semibold text-gray-300 mb-2">Trades on {date}</h3>
       <div className="space-y-2">
         {trades.map((trade, index) => {
-          const hasValidImage =
-            trade.image &&
-            (trade.image.startsWith('data:image') || /^[A-Za-z0-9+/=]+$/.test(trade.image));
-          const imageSrc =
-            trade.image && !trade.image.startsWith('data:image')
-              ? `data:image/png;base64,${trade.image}`
-              : trade.image;
+          const imageSrc = trade.image?.startsWith('data:image')
+            ? trade.image
+            : trade.image
+            ? `data:image/png;base64,${trade.image}`
+            : null;
+
+          const hasValidImage = !!imageSrc;
 
           return (
             <div
