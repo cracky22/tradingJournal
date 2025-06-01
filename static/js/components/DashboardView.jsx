@@ -35,7 +35,7 @@ function DashboardView({
     });
   }, [t, gf]);
 
-  // Initialize Profit Chart
+  // Initialize Cumulative Profit Chart
   useEffect(() => {
     if (profitChartRef.current) {
       if (profitChartInstance.current) {
@@ -48,19 +48,14 @@ function DashboardView({
         options: {
           responsive: true,
           scales: {
-            x: { title: { display: true, text: 'Trade', color: '#e5e7eb' }, ticks: { color: '#e5e7eb' } },
-            y: { title: { display: true, text: 'Profit ($)', color: '#e5e7eb' }, ticks: { color: '#e5e7eb' } }
+            x: { title: { display: true, text: 'Date', color: '#e5e7eb' }, ticks: { color: '#e5e7eb' } },
+            y: { title: { display: true, text: 'Cumulative Profit ($)', color: '#e5e7eb' }, ticks: { color: '#e5e7eb' } }
           },
           plugins: {
             legend: { labels: { color: '#e5e7eb' } },
             tooltip: {
               callbacks: {
-                label: (context) => {
-                  const trade = context.raw.tradeData;
-                  return trade
-                    ? `Profit: $${context.raw.y.toFixed(2)}, Date: ${trade.date}`
-                    : `Profit: $${context.raw.y.toFixed(2)}`;
-                }
+                label: (context) => `Profit: $${context.raw.y.toFixed(2)}, Date: ${context.raw.x}`
               }
             }
           }
@@ -111,28 +106,28 @@ function DashboardView({
   }, [t, gtp, gf]);
 
   return (
-    <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
+    <div className="container mx-auto p-4">
       <h2 className="text-2xl font-bold text-white mb-4">Dashboard</h2>
 
       {/* Summary Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-gray-700 p-4 rounded-lg">
+        <div className="bg-gray-800 p-4 rounded-lg shadow">
           <h3 className="text-lg font-semibold text-gray-300">Total Profit</h3>
           <p className="text-2xl" style={{ color: stats.totalProfit >= 0 ? '#22c55e' : '#ef4444' }}>
             ${stats.totalProfit.toFixed(2)}
           </p>
         </div>
-        <div className="bg-gray-700 p-4 rounded-lg">
+        <div className="bg-gray-800 p-4 rounded-lg shadow">
           <h3 className="text-lg font-semibold text-gray-300">Total Trades</h3>
           <p className="text-2xl text-white">{stats.totalTrades}</p>
         </div>
-        <div className="bg-gray-700 p-4 rounded-lg">
-          <h3 className="text-lg font-semibold text-gray-300">Avg. Profit/Trade</h3>
+        <div className="bg-gray-800 p-4 rounded-lg shadow">
+          <h3 className="text-lg font-semibold text-gray-300">Average Profit/Trade</h3>
           <p className="text-2xl" style={{ color: stats.avgProfitPerTrade >= 0 ? '#22c55e' : '#ef4444' }}>
             ${stats.avgProfitPerTrade.toFixed(2)}
           </p>
         </div>
-        <div className="bg-gray-700 p-4 rounded-lg">
+        <div className="bg-gray-800 p-4 rounded-lg shadow">
           <h3 className="text-lg font-semibold text-gray-300">Win Rate</h3>
           <p className="text-2xl text-white">{stats.winRate.toFixed(1)}%</p>
         </div>
@@ -141,13 +136,13 @@ function DashboardView({
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Cumulative Profit Chart */}
-        <div className="bg-gray-700 p-4 rounded-lg">
-          <h3 className="text-lg font-semibold text-gray-300 mb-2">Cumulative Profit</h3>
+        <div className="bg-gray-800 p-4 rounded-lg shadow">
+          <h3 className="text-lg font-semibold text-gray-300 mb-2">Cumulative Profit Over Time</h3>
           <canvas ref={profitChartRef} className="w-full h-64"></canvas>
         </div>
 
         {/* Time Performance Chart */}
-        <div className="bg-gray-700 p-4 rounded-lg">
+        <div className="bg-gray-800 p-4 rounded-lg shadow">
           <h3 className="text-lg font-semibold text-gray-300 mb-2">Performance by Trade Duration</h3>
           <canvas ref={timePerfChartRef} className="w-full h-64"></canvas>
         </div>
