@@ -4,7 +4,7 @@ function App() {
   const [profiles, setProfiles] = useState([]);
   const [currentProfile, setCurrentProfile] = useState('');
   const [trades, setTrades] = useState({});
-  const [tagsState, setTagsState] = useState([]);
+  const [tags, setTags] = useState([]);
   const [strategies, setStrategies] = useState(['Trendfolge', 'Volumen', 'Fibonacci', 'Sweep', 'Range', 'RAIN']);
   const [view, setView] = useState('dashboard');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
@@ -14,7 +14,7 @@ function App() {
   const [allTradesFMkt, setAllTradesFMkt] = useState('All');
   const [allTradesFPrd, setAllTradesFPrd] = useState('All');
   const [allTradesFTag, setAllTradesFTag] = useState('All');
-  const [allTradesFStr, setAllTradesFStr] = useState(null);
+  const [allTradesFStar, setAllTradesFStar] = useState(null);
   const [allTradesFStart, setAllTradesFStart] = useState('');
   const [allTradesFEnd, setAllTradesFEnd] = useState('');
   const [ovDate, setOvDate] = useState(null);
@@ -32,7 +32,7 @@ function App() {
         setProfiles(parsed.profiles || ['Profile 1']);
         setCurrentProfile(parsed.currentProfile || 'Profile 1');
         setTrades(parsed.trades || {});
-        setTagsState(parsed.tags || []);
+        setTags(parsed.tags || []);
         setStrategies(parsed.strategies || ['Trendfolge', 'Volumen', 'Fibonacci', 'Sweep', 'Range', 'RAIN']);
         return true;
       } catch (e) {
@@ -67,11 +67,12 @@ function App() {
         signal: AbortSignal.timeout(10000),
       });
       if (!profilesResponse.ok) {
-        const data = await profilesResponse.json().catch(() => ({}));
+        const data = await profilesResponse.json().catch(() => {});
         throw new Error(data.error || `HTTP error! Status: ${profilesResponse.status}`);
       }
       const { profiles: profilesList } = await profilesResponse.json();
       const profilesData = profilesList.length > 0 ? profilesList : ['Profile 1'];
+      
       setProfiles(profilesData);
       setCurrentProfile(profilesData[0] || 'Profile 1');
 
@@ -81,7 +82,7 @@ function App() {
           signal: AbortSignal.timeout(10000),
         });
         if (!response.ok) {
-          const data = await response.json().catch(() => ({}));
+          const data = await response.json().catch(() => {});
           throw new Error(data.error || `HTTP error! Status: ${response.status}`);
         }
         const data = await response.json();
@@ -92,7 +93,7 @@ function App() {
 
       saveToSessionStorage(allData);
       setTrades(allData.trades);
-      setTagsState(allData.tags);
+      setTags(allData.tags);
       setStrategies(allData.strategies);
     } catch (error) {
       console.error('Error fetching all data:', error);
@@ -100,7 +101,7 @@ function App() {
       setProfiles(['Profile 1']);
       setCurrentProfile('Profile 1');
       setTrades({ 'Profile 1': {} });
-      setTagsState([]);
+      setTags([]);
       setStrategies(['Trendfolge', 'Volumen', 'Fibonacci', 'Sweep', 'Range', 'RAIN']);
     } finally {
       setIsLoading(false);
@@ -146,7 +147,7 @@ function App() {
         profiles: profiles,
         currentProfile: currentProfile,
         trades: trades,
-        tags: tagsState,
+        tags: tags,
         strategies: strategies,
       };
       const response = await fetch('/api/submit_data', {
@@ -197,13 +198,13 @@ function App() {
           ...prev,
           [profile]: data.trades || {},
         }));
-        setTagsState((prev) => [...new Set([...prev, ...(data.tags || [])])]);
+        setTags((prev) => [...new Set([...prev, ...(data.tags || [])])]);
         setStrategies((prev) => [...new Set([...prev, ...(data.strategies || [])])]);
         saveToSessionStorage({
           profiles,
           currentProfile: profile,
           trades: { ...trades, [profile]: data.trades || {} },
-          tags: [...new Set([...tagsState, ...(data.tags || [])])],
+          tags: [...new Set([...tags, ...(data.tags || [])])],
           strategies: [...new Set([...strategies, ...(data.strategies || [])])],
         });
       } catch (error) {
@@ -263,11 +264,11 @@ function App() {
     if (!updated[currentProfile][d].length) delete updated[currentProfile][d];
     return updated;
   });
-  const addTag = (t) => !tagsState.includes(t) && setTagsState((p) => [...p, t]);
+  const addTag = (t) => !tags.includes(t) && setTags((prev) => [...prev, t]);
   const delTag = (t) => {
-    setTagsState((p) => p.filter((x) => x !== t));
-    setTrades((p) => {
-      const updated = { ...p };
+    setTags((prev) => prev.filter((x) => x !== t));
+    setTrades((prev) => {
+      const updated = { ...prev };
       for (let profile in updated) {
         for (let date in updated[profile]) {
           updated[profile][date] = updated[profile][date].map((trade) => ({
@@ -279,8 +280,8 @@ function App() {
       return updated;
     });
   };
-  const addStrategy = (s) => !strategies.includes(s) && setStrategies((p) => [...p, s]);
-  const delStrategy = (s) => setStrategies((p) => p.filter((x) => x !== s));
+  const addStrategy = (s) => !strategies.includes(s) && setStrategies((prev) => [...prev, s]);
+  const delStrategy = (s) => setStrategies((prev) => prev.filter((x) => x !== s));
   const getProfit = (d) => (trades[currentProfile]?.[d] || []).reduce((s, t) => s + (t.profitLossDollar || 0), 0) || 0;
   const getFTrades = () => {
     let f = Object.values(trades[currentProfile] || {}).flat().filter((t) => t && typeof t === 'object');
@@ -291,32 +292,85 @@ function App() {
       if (allTradesFPrd === 'Week') {
         s = new Date(n);
         s.setDate(n.getDate() - (n.getDay() || 7) + 1);
-      } else s = new Date(n.getFullYear(), n.getMonth() - { Month: 1, Quarter: 3 }[allTradesFPrd], n.getDate());
+      } else {
+        s = new Date(n.getFullYear(), n.getMonth() - { Month: 1, Quarter: 3 }[allTradesFPrd], n.getDate());
+      }
       f = f.filter((t) => new Date(t.date) >= s && new Date(t.date) <= n);
     }
     if (allTradesFTag !== 'All') f = f.filter((t) => (t.tags || []).includes(allTradesFTag));
-    if (allTradesFStr !== null) f = f.filter((t) => (t.stars || 0) === allTradesFStr);
-    if (allTradesFStart && allTradesFEnd) f = f.filter((t) => new Date(t.date) >= new Date(allTradesFStart) && new Date(t.date) <= new Date(allTradesFEnd));
+    if (allTradesFStar !== null) f = f.filter((t) => (t.stars || 0) === allTradesFStar);
+    if (allTradesFStart && allTradesFEnd) {
+      f = f.filter((t) => new Date(t.date) >= new Date(allTradesFStart) && new Date(t.date) <= new Date(allTradesFEnd));
+    }
     return f;
   };
   const getCData = (t) => {
-    if (!Array.isArray(t)) return { labels: [], datasets: [{ label: 'Profit ($)', data: [0], tradeData: [null], borderColor: 'rgb(59, 130, 246)', backgroundColor: 'rgba(59, 130, 246, 0.1)', tension: 0.4, fill: true, pointBackgroundColor: 'rgb(59, 130, 246)', pointBorderColor: '#fff', pointRadius: 4, pointHoverRadius: 6 } ]};
+    if (!Array.isArray(t)) {
+      return {
+        labels: [],
+        datasets: [
+          {
+            label: 'Profit ($)',
+            data: [0],
+            tradeData: [null],
+            borderColor: 'rgb(59, 130, 246)',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            tension: 0.4,
+            fill: true,
+            pointBackgroundColor: 'rgb(59, 130, 246)',
+            pointBorderColor: '#fff',
+            pointRadius: 4,
+            pointHoverRadius: 6,
+          },
+        ],
+      };
+    }
     const s = t.sort((a, b) => new Date(a.date) - new Date(b.date));
     let sum = 0;
     const data = s.length ? [0, ...s.map((x) => (sum += x.profitLossDollar || 0))] : [0];
     const tradeData = s.length ? [null, ...s] : [null];
     const labels = s.length ? ['Start', ...s.map((_, i) => `Trade ${i + 1}`)] : ['Start'];
-    return { labels, datasets: [{ label: 'Profit ($)', data, tradeData, borderColor: 'rgb(59, 130, 246)', backgroundColor: 'rgba(59, 130, 246, 0.1)', tension: 0.4, fill: true, pointBackgroundColor: 'rgb(59, 130, 246)', pointBorderColor: '#fff', pointRadius: 4, pointHoverRadius: 6 } ]};
+    return {
+      labels,
+      datasets: [
+        {
+          label: 'Profit ($)',
+          data,
+          tradeData,
+          borderColor: 'rgb(59, 130, 246)',
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          tension: 0.4,
+          fill: true,
+          pointBackgroundColor: 'rgb(59, 130, 246)',
+          pointBorderColor: '#fff',
+          pointRadius: 4,
+          pointHoverRadius: 6,
+        },
+      ],
+    };
   };
   const getTimePerfData = (t) => {
     if (!Array.isArray(t)) return { labels: [], datasets: [] };
-    const dataPoints = t.map((trade) => ({ x: trade.tradeDuration || 0, y: trade.profitLossDollar || 0 }));
-    return { datasets: [{ label: 'Performance by Duration', data: dataPoints, backgroundColor: dataPoints.map((point) => (point.y >= 0 ? 'rgb(34, 197, 94)' : 'rgb(239, 68, 68)')), pointRadius: 5, pointHoverRadius: 7 }] };
+    const dataPoints = t.map((trade) => ({
+      x: trade.tradeDuration || 0,
+      y: trade.profitLossDollar || 0,
+    }));
+    return {
+      datasets: [
+        {
+          label: 'Performance by Duration',
+          data: dataPoints,
+          backgroundColor: dataPoints.map((point) => (point.y >= 0 ? 'rgb(34, 197, 94)' : 'rgb(239, 68, 68)')),
+          pointRadius: 5,
+          pointHoverRadius: 7,
+        },
+      ],
+    };
   };
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-gray-900 text-gray-200 flex flex-col sm:flex-row">
+      <div className="min-h-screen bg-gray-900 text-gray-200 flex flex-col sm:flex-row relative">
         <div className="w-full sm:w-16 md:w-56 bg-gray-800 p-4 flex flex-col smooth-transition z-10">
           <h1 className="text-2xl font-bold text-white mb-6 hidden sm:block">Trading Journal</h1>
           <h1 className="text-xl font-bold text-white mb-4 sm:hidden">TJ</h1>
@@ -330,13 +384,17 @@ function App() {
               aria-label="Select profile"
             >
               {profiles.map((p) => (
-                <option key={p} value={p}>{p}</option>
+                <option key={p} value={p}>
+                  {p}
+                </option>
               ))}
             </select>
           )}
           <button
             onClick={() => setShowProfileManager(!showProfileManager)}
-            className={`w-full text-left py-2 px-4 rounded-lg smooth-transition ${showProfileManager ? 'bg-blue-600 text-white' : 'hover:bg-gray-700'}`}
+            className={`w-full text-left py-2 px-4 rounded-lg smooth-transition ${
+              showProfileManager ? 'bg-blue-600 text-white' : 'hover:bg-gray-700'
+            }`}
           >
             <span className="block sm:truncate">Manage Profiles</span>
           </button>
@@ -352,13 +410,13 @@ function App() {
               />
               <button
                 onClick={handleRenameProfile}
-                className="w-full px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-blue-600 mb-2 smooth-transition"
+                className="w-full px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-600 mb-2 smooth-transition"
               >
                 Rename Profile
               </button>
               <button
                 onClick={handleAddProfile}
-                className="w-full px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-blue-500 mb-2 smooth-transition"
+                className="w-full px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-600 mb-2 smooth-transition"
               >
                 Add New Profile
               </button>
@@ -371,20 +429,24 @@ function App() {
               <button
                 onClick={handleSubmitData}
                 disabled={isSubmitting}
-                className={`w-full px-4 py-2 text-white rounded:bg-gray-6 ${isSubmitting ? 'bg-gray-600 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-500'} smooth-transition`}
+                className={`w-full px-4 py-2 text-white rounded-lg smooth-transition ${
+                  isSubmitting ? 'bg-gray-600 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-500'
+                }`}
               >
                 {isSubmitting ? 'Submitting...' : 'Submit Data'}
               </button>
               <button
                 onClick={fetchAllData}
                 disabled={isLoading}
-                className={`w-full px-4 py-2 text-white rounded-lg mt-2 ${isLoading ? 'bg-gray-600 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-500'} smooth-transition`}
+                className={`w-full px-4 py-2 text-white rounded-lg mt-2 smooth-transition ${
+                  isLoading ? 'bg-gray-600 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-500'
+                }`}
               >
                 {isLoading ? 'Loading...' : 'Refresh Data'}
               </button>
             </div>
           )}
-          {['dashboard', 'calendar', 'graphs', 'allTrades', 'strategies'].map((v) => (
+          {['dashboard', 'calendar', 'trades', 'allTrades', 'strategies'].map((v) => (
             <button
               key={v}
               onClick={() => {
@@ -392,9 +454,13 @@ function App() {
                 setOvDate(null);
                 setShowProfileManager(false);
               }}
-              className={`w-full text-left py-2 px-4 rounded-lg smooth-transition ${view === v ? 'bg-blue-600 text-white' : 'hover:bg-gray-700'}`}
+              className={`w-full text-left py-2 px-4 rounded-lg smooth-transition ${
+                view === v ? 'bg-blue-600 text-white' : 'hover:bg-gray-700'
+              }`}
             >
-              <span className="block sm:truncate">{v === 'allTrades' ? 'All Trades' : v.charAt(0).toUpperCase() + v.slice(1)}</span>
+              <span className="block sm:truncate">
+                {v === 'allTrades' ? 'All Trades' : v.charAt(0).toUpperCase() + v.slice(1)}
+              </span>
             </button>
           ))}
         </div>
@@ -402,77 +468,77 @@ function App() {
           {ovDate ? (
             <DayOverview
               t={trades[currentProfile] || {}}
-              date={ovDate}
-              setDate={setOvDate}
-              getProfit={getProfit}
-              getCData={getCData}
-              delTrade={delTrade}
-              fetchImage={fetchImage}
-              currentProfile={currentProfile}
+              d={ovDate}
+              sd={setOvDate}
+              gp={getProfit}
+              gc={getCData}
+              dt={delTrade}
+              fi={fetchImage}
+              cp={currentProfile}
             />
           ) : (
             <>
               {view === 'dashboard' && (
                 <DashboardView
-                  trades={trades[currentProfile] || {}}
-                  getCData={getCData}
-                  getProfit={getProfit}
-                  getFTrades={getFTrades}
-                  getTimePerfData={getTimePerfData}
+                  t={trades[currentProfile] || {}}
+                  gc={getCData}
+                  gp={getProfit}
+                  gf={getFTrades}
+                  gtp={getTimePerfData}
                 />
               )}
               {view === 'calendar' && (
                 <CalendarView
-                  trades={trades[currentProfile] || {}}
-                  date={date}
-                  setDate={setDate}
-                  getProfit={getProfit}
-                  month={month}
-                  year={year}
-                  setMonth={setMonth}
-                  setYear={setYear}
-                  setOvDate={setOvDate}
+                  t={trades[currentProfile] || {}}
+                  d={date}
+                  sd={setDate}
+                  gp={getProfit}
+                  m={month}
+                  y={year}
+                  sm={setMonth}
+                  sy={setYear}
+                  so={setOvDate}
                 />
               )}
-              {view === 'graphs' && (
+              {view === 'trades' && (
                 <TradesView
-                  trades={trades[currentProfile] || {}}
-                  addTrade={addTrade}
-                  updatetrade={updTrade}
-                  delTrade={delTrade}
-                  date={date}
-                  setDate={setDate}
-                  tags={tagsState}
-                  addTag={addTag}
-                  delTag={delTag}
-                  strategies={strategies}
+                  t={trades[currentProfile] || {}}
+                  at={addTrade}
+                  ut={updTrade}
+                  dt={delTrade}
+                  d={date}
+                  sd={setDate}
+                  tg={tags}
+                  ag={addTag}
+                  dg={delTag}
+                  st={strategies}
                   edit={edit}
                   setEdit={setEdit}
-                  fetchImage={fetchImage}
-                  currentProfile={currentProfile}
+                  fi={fetchImage}
+                  cp={currentProfile}
                 />
               )}
               {view === 'allTrades' && (
                 <AllTradesView
-                  trades={trades[currentProfile] || {}}
-                  getFTrades={getFTrades}
-                  filterStars={allTradesFStr}
-                  setFilterStars={setAllTradesFStr}
-                  filterMarket={allTradesFMkt}
-                  setFilterMarket={setAllTradesFMkt}
-                  filterTag={allTradesFTag}
-                  setFilterTag={setAllTradesFTag}
-                  filterPeriod={allTradesFPrd}
-                  setFilterPeriod={setAllTradesFPrd}
-                  filterStartDate={allTradesFStart}
-                  setFilterStartDate={setAllTradesFStart}
-                  filterEndDate={allTradesFEnd}
-                  setFilterEndDate={setAllTradesFEnd}
-                  delTrade={delTrade}
-                  tags={tagsState}
-                  strategies={strategies}
-                  fetchImage={fetchImage}
-                  currentProfile={currentProfile}
+                  t={trades[currentProfile] || {}}
+                  gf={getFTrades}
+                  fs={allTradesFStar}
+                  sfs={setAllTradesFStar}
+                  fm={allTradesFMkt}
+                  sfm={setAllTradesFMkt}
+                  ft={allTradesFTag}
+                  sft={setAllTradesFTag}
+                  fp={allTradesFPrd}
+                  sfp={setAllTradesFPrd}
+                  fst={allTradesFStart}
+                  sfst={setAllTradesFStart}
+                  fe={allTradesFEnd}
+                  sfe={setAllTradesFEnd}
+                  dt={delTrade}
+                  tg={tags}
+                  st={strategies}
+                  fi={fetchImage}
+                  cp={currentProfile}
                 />
               )}
               {view === 'strategies' && (
@@ -485,6 +551,7 @@ function App() {
             </>
           )}
         </div>
-      </ErrorBoundary>
-    );
-  }
+      </div>
+    </ErrorBoundary>
+  );
+}
