@@ -19,7 +19,7 @@ from os import environ
 DATA_FILE = environ.get('TRADING_JOURNAL_DATA_FILE', 'trading_journal_data.json')
 HOST = environ.get('TRADING_JOURNAL_HOST', 'localhost')
 PORT = int(environ.get('TRADING_JOURNAL_PORT', 2108))
-LOG_FILE = environ.get('TRADING_JOURNAL_LOG_FILE', 'server.log')
+LOG_FILE = environ.get('TRADING_JOURNAL_LOG_FILE', 'backend.log')
 LAST_LOG_FILE = environ.get('TRADING_JOURNAL_LAST_LOG_FILE', 'last.log')
 MAX_LOG_SIZE = int(environ.get('TRADING_JOURNAL_MAX_LOG_SIZE', 10 * 1024 * 1024))  # 10 MB
 BACKUP_COUNT = int(environ.get('TRADING_JOURNAL_LOG_BACKUP_COUNT', 5))
