@@ -124,9 +124,10 @@ function CalendarView({
         ))}
       </div>
 
-      {d && dayTrades.length > 0 && (
+      {/* Trades for Selected Day or Initial Display */}
+      {(d || dayTrades.length > 0) && (
         <div className="mt-6">
-          <h3 className="text-lg font-semibold text-gray-300 mb-2">Trades on {d}</h3>
+          <h3 className="text-lg font-semibold text-gray-300 mb-2">Trades on {d || 'Selected Day'}</h3>
           <div className="space-y-2">
             {dayTrades.map((trade, index) => {
               const hasValidImage =
