@@ -24,8 +24,15 @@ MAX_LOG_SIZE = int(environ.get('TRADING_JOURNAL_MAX_LOG_SIZE', 10 * 1024 * 1024)
 BACKUP_COUNT = int(environ.get('TRADING_JOURNAL_LOG_BACKUP_COUNT', 5))
 UPLOAD_FOLDER = environ.get('TRADING_JOURNAL_UPLOAD_FOLDER', 'static/images')
 
+def format_size(bytes_size):
+    for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
+        if bytes_size < 1024.0:
+            return f"{bytes_size:.2f} {unit}"
+        bytes_size /= 1024.0
+    return f"{bytes_size:.2f} PB"
+
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
 stream_handler = logging.StreamHandler(sys.stdout)
 stream_handler.setFormatter(formatter)
@@ -49,12 +56,12 @@ cached_data = None
 last_modified_time = 0
 
 def load_data_from_file():
-    logger.debug(f"Loading data from {DATA_FILE}")
     try:
         with open(DATA_FILE, 'r') as f:
-            data = json.load(f)
-            logger.debug(f"Loaded data: {json.dumps(data)[:500]}")
-            return data
+            content = f.read()
+            size = format_size(len(content.encode('utf-8')))
+            logger.info(f"Loading data from file ({size})")
+            return json.loads(content)
     except Exception as e:
         logger.error(f"Error loading data: {str(e)}")
         init_data_file()
@@ -65,11 +72,9 @@ def load_data():
     try:
         current_mtime = os.path.getmtime(DATA_FILE)
         if cached_data is None or current_mtime > last_modified_time:
-            logger.debug("Cache miss or data file updated. Reloading.")
             cached_data = load_data_from_file()
             last_modified_time = current_mtime
     except FileNotFoundError:
-        logger.warning(f"Data file {DATA_FILE} not found. Initializing.")
         init_data_file()
         cached_data = {'profiles': {}, 'currentProfile': 'Profile 1'}
         last_modified_time = os.path.getmtime(DATA_FILE)
@@ -77,20 +82,24 @@ def load_data():
 
 def save_data(data):
     global cached_data, last_modified_time
-    logger.debug(f"Saving data. Profiles: {list(data.get('profiles', {}).keys())}")
     try:
         backup_file = f"{DATA_FILE}.backup"
         if os.path.exists(DATA_FILE):
             shutil.copy2(DATA_FILE, backup_file)
             logger.info(f"Created backup: {backup_file}")
+
         with open(DATA_FILE, 'w') as f:
             json.dump(data, f, indent=2)
+
+        size = os.path.getsize(DATA_FILE)
+        logger.info(f"Saved data to file ({format_size(size)})")
+
         if os.path.exists(backup_file):
             os.remove(backup_file)
             logger.info(f"Removed backup: {backup_file}")
+
         cached_data = data
         last_modified_time = os.path.getmtime(DATA_FILE)
-        logger.debug("Data saved successfully.")
     except Exception as e:
         logger.error(f"Error saving data: {str(e)}")
         if os.path.exists(backup_file):
@@ -108,7 +117,6 @@ def init_data_file():
 def serve_index():
     try:
         index_path = os.path.join('static', 'index.html')
-        logger.debug(f"Serving index from {index_path}")
         if not os.path.exists(index_path):
             logger.error(f"index.html not found at {index_path}")
             return jsonify({'error': 'index.html not found'}), 404
@@ -122,7 +130,7 @@ def get_profiles():
     try:
         data = load_data()
         profiles = list(data.get('profiles', {}).keys()) or ['Profile 1']
-        logger.debug(f"Returning profiles: {profiles}")
+        logger.info(f"Fetched profiles: {profiles}")
         return jsonify({'profiles': profiles})
     except Exception as e:
         logger.error(f"Error fetching profiles: {str(e)}")
@@ -130,23 +138,25 @@ def get_profiles():
 
 @app.route('/api/get_data/<profile_name>', methods=['GET'])
 def get_data(profile_name):
-    logger.debug(f"Fetching data for profile: {profile_name}")
     try:
         data = load_data()
         profile_data = data.get('profiles', {}).get(profile_name, {})
+        size = len(json.dumps(profile_data).encode('utf-8'))
+        logger.info(f"Fetched data for profile '{profile_name}' ({format_size(size)})")
+
         trades = profile_data.get('trades', {})
-        modified_trades = {
-            date: [
+        modified_trades = {}
+        for date, trade_list in trades.items():
+            modified_trades[date] = [
                 {**trade, 'image': trade.get('image'), 'imageRef': None}
                 for trade in trade_list
-            ] for date, trade_list in trades.items()
-        }
+            ]
+
         response = {
             'trades': modified_trades,
             'tags': profile_data.get('tags', []),
             'strategies': profile_data.get('strategies', [])
         }
-        logger.debug(f"Returning data for {profile_name}: {list(modified_trades.keys())}")
         return jsonify(response)
     except Exception as e:
         logger.error(f"Error fetching data for profile {profile_name}: {str(e)}")
@@ -154,20 +164,21 @@ def get_data(profile_name):
 
 @app.route('/api/get_image/<profile_name>/<date>/<index>', methods=['GET'])
 def get_image(profile_name, date, index):
-    logger.debug(f"Getting image for {profile_name}, {date}, index {index}")
     try:
         data = load_data()
         profile_data = data.get('profiles', {}).get(profile_name, {})
         trades = profile_data.get('trades', {}).get(date, [])
         index = int(index)
+
         if index < 0 or index >= len(trades):
-            logger.warning(f"Invalid trade index {index} for {profile_name} on {date}")
             return jsonify({'error': 'Invalid trade index'}), 404
+
         trade = trades[index]
         image_data = trade.get('image')
         if not image_data:
-            logger.warning("No image data available.")
             return jsonify({'error': 'No image for this trade'}), 404
+
+        logger.info(f"Fetched image for profile={profile_name}, date={date}, index={index}, size={format_size(len(image_data.encode('utf-8')))}")
         return jsonify({'image': image_data})
     except Exception as e:
         logger.error(f"Error fetching image for profile {profile_name}, date {date}, index {index}: {str(e)}")
@@ -175,39 +186,44 @@ def get_image(profile_name, date, index):
 
 @app.route('/api/upload_image', methods=['POST'])
 def upload_image():
-    logger.debug("Handling image upload")
     try:
         if 'image' not in request.files:
-            logger.warning("No image file in request")
             return jsonify({'error': 'No image file provided'}), 400
+
         file = request.files['image']
         if file.filename == '':
-            logger.warning("No file selected")
             return jsonify({'error': 'No selected file'}), 400
+
         profile = request.form.get('profile')
         date = request.form.get('date')
         index = request.form.get('index')
+
         if not all([profile, date, index]):
-            logger.warning("Missing form data")
             return jsonify({'error': 'Missing profile, date, or index'}), 400
+
         index = int(index)
         data = load_data()
         profile_data = data.get('profiles', {}).get(profile, {})
         trades = profile_data.get('trades', {}).get(date, [])
+
         if index < 0 or index > len(trades):
-            logger.warning(f"Invalid trade index {index}")
             return jsonify({'error': 'Invalid trade index'}), 400
-        image_data = base64.b64encode(file.read()).decode('utf-8')
+
+        image_bytes = file.read()
+        image_data = base64.b64encode(image_bytes).decode('utf-8')
+        logger.info(f"Uploaded image for profile={profile}, date={date}, index={index}, size={format_size(len(image_bytes))}")
+
         if index < len(trades):
             trades[index]['image'] = image_data
         else:
             trade = {'date': date, 'image': image_data}
             trades.append(trade)
+
         profile_data['trades'] = profile_data.get('trades', {})
         profile_data['trades'][date] = trades
         data['profiles'][profile] = profile_data
         save_data(data)
-        logger.info(f"Uploaded image for {profile} on {date} at index {index}")
+
         return jsonify({'message': 'Image uploaded successfully', 'image': image_data})
     except Exception as e:
         logger.error(f"Error uploading image: {str(e)}")
@@ -215,25 +231,29 @@ def upload_image():
 
 @app.route('/api/submit_data', methods=['POST'])
 def submit_data():
-    logger.debug("Submitting data")
     try:
         data = request.get_json()
         valid, error = validate_data(data)
         if not valid:
             logger.error(f"Invalid data: {error}")
             return jsonify({'error': error}), 400
+
         current_data = load_data()
         profiles = data.get('profiles', ['Profile 1'])
         current_profile = data.get('currentProfile', 'Profile 1')
+
+        current_data['profiles'] = current_data.get('profiles', {})
         for profile in profiles:
             current_data['profiles'][profile] = {
                 'trades': data.get('trades', {}).get(profile, {}),
                 'tags': data.get('tags', []),
                 'strategies': data.get('strategies', [])
             }
+
         current_data['currentProfile'] = current_profile
+        logger.info(f"Submitting data: size={format_size(len(json.dumps(current_data).encode('utf-8')))}")
         save_data(current_data)
-        logger.info("Data submitted and saved")
+
         return jsonify({'message': 'Data saved successfully'})
     except Exception as e:
         logger.error(f"Error submitting data: {str(e)}")
@@ -260,9 +280,7 @@ def signal_handler(sig, frame):
 
 def open_browser():
     time.sleep(1)
-    url = f"http://{HOST}:{PORT}"
-    logger.info(f"Opening browser at {url}")
-    webbrowser.open(url)
+    webbrowser.open(f"http://{HOST}:{PORT}")
 
 if __name__ == '__main__':
     signal.signal(signal.SIGINT, signal_handler)
