@@ -112,7 +112,6 @@
       const [isSubmitting, setIsSubmitting] = useState(false);
       const [isLoading, setIsLoading] = useState(true);
 
-      // Function to fetch image for a specific trade
       const fetchImage = async (profile, date, index) => {
         try {
           const response = await fetch(`/api/get_image/${encodeURIComponent(profile)}/${encodeURIComponent(date)}/${index}`, {
@@ -130,7 +129,6 @@
         }
       };
 
-      // Load data from sessionStorage or server
       const loadFromSessionStorage = () => {
         const storedData = sessionStorage.getItem('tradingJournalData');
         if (storedData) {
@@ -151,7 +149,6 @@
         return false;
       };
 
-      // Save data to sessionStorage
       const saveToSessionStorage = (data) => {
         try {
           sessionStorage.setItem('tradingJournalData', JSON.stringify({
@@ -166,11 +163,9 @@
         }
       };
 
-      // Fetch all profiles and their data
       const fetchAllData = async () => {
         setIsLoading(true);
         try {
-          // Fetch list of profiles
           const profilesResponse = await fetch('/api/get_profiles', {
             signal: AbortSignal.timeout(10000),
           });
@@ -183,7 +178,6 @@
           setProfiles(profilesData);
           setCurrentProfile(profilesData[0] || 'Profile 1');
 
-          // Fetch data for each profile
           const allData = { profiles: profilesData, currentProfile: profilesData[0] || 'Profile 1', trades: {}, tags: [], strategies: [] };
           for (const profile of profilesData) {
             const response = await fetch(`/api/get_data/${encodeURIComponent(profile)}`, {
@@ -199,7 +193,6 @@
             allData.strategies = [...new Set([...allData.strategies, ...(data.strategies || [])])];
           }
 
-          // Store in sessionStorage
           saveToSessionStorage(allData);
           setTrades(allData.trades);
           setTagsState(allData.tags);
@@ -294,7 +287,6 @@
         setView('dashboard');
         setOvDate(null);
         setShowProfileManager(false);
-        // Ensure trades for the profile exist, fetch if missing
         if (!trades[profile]) {
           try {
             const response = await fetch(`/api/get_data/${encodeURIComponent(profile)}`, {
