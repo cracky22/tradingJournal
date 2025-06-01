@@ -1,15 +1,7 @@
 const { useState, useEffect } = React;
 
 function CalendarView({
-  t,   // trades: Object with trades grouped by date
-  d,   // selected date string (e.g. "2025-06-01")
-  sd,  // setDate: function to update selected date
-  gp,  // getProfit: function (dateStr) => profit
-  m,   // month (0-11)
-  y,   // year (e.g. 2025)
-  sm,  // setMonth
-  sy,  // setYear
-  so   // setOvDate: sets date for detailed view
+  t, d, sd, gp, m, y, sm, sy, so
 }) {
   const getCalendarDays = () => {
     const firstDay = new Date(y, m, 1);
@@ -50,7 +42,7 @@ function CalendarView({
 
   const handleDayClick = (date) => {
     sd(date);
-    so(date);
+    so(date); // => das ruft vermutlich die DayOverview-Komponente auf
   };
 
   const monthNames = [
@@ -64,7 +56,6 @@ function CalendarView({
     <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
       <h2 className="text-2xl font-bold text-white mb-4">Calendar</h2>
 
-      {/* Month Navigation */}
       <div className="flex justify-between items-center mb-4">
         <button
           onClick={handlePrevMonth}
@@ -83,7 +74,6 @@ function CalendarView({
         </button>
       </div>
 
-      {/* Calendar Grid */}
       <div className="grid grid-cols-7 gap-1">
         {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
           <div key={day} className="text-center text-gray-400 font-semibold p-2">
@@ -122,7 +112,6 @@ function CalendarView({
         ))}
       </div>
 
-      {/* Trades for Selected Day */}
       {d && dayTrades.length > 0 && (
         <div className="mt-6">
           <h3 className="text-lg font-semibold text-gray-300 mb-2">Trades on {d}</h3>
