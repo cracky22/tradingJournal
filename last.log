@@ -1,3 +1,4 @@
 2025-06-01 13:30:30,117 [INFO] Starting server on http://localhost:2108
 2025-06-01 13:30:32,172 [INFO] Loaded data from trading_journal_data.json, size: 151.0 B
 2025-06-01 13:30:32,206 [INFO] Loaded data from trading_journal_data.json, size: 151.0 B
+2025-06-01 13:30:55,414 [INFO] Shutting down server...
