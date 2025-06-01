@@ -1,7 +1,32 @@
 {
   "profiles": {
     "Profile 1": {
-      "trades": {},
+      "trades": {
+        "2025-06-01": [
+          {
+            "date": "2025-06-01",
+            "image": null,
+            "imageRef": false,
+            "market": "",
+            "profitLossDollar": 123,
+            "stars": 0,
+            "strategy": "",
+            "tags": [],
+            "tradeDuration": 123
+          },
+          {
+            "date": "2025-06-01",
+            "image": null,
+            "imageRef": false,
+            "market": "",
+            "profitLossDollar": 234,
+            "stars": 0,
+            "strategy": "",
+            "tags": [],
+            "tradeDuration": 234
+          }
+        ]
+      },
       "tags": [],
       "strategies": []
     }
