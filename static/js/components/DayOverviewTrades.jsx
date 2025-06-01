@@ -74,9 +74,17 @@ function DayOverviewTrades({ trades, date, dt, fi, cp }) {
                     }}
                   />
                 ) : (
-                  <div className="w-16 h-16 bg-gray-600 flex items-center justify-center rounded mt-2 text-white text-xs">
-                    No Image
-                  </div>
+                  <img
+                    src={imageSrc}
+                    alt="Trade screenshot"
+                    className="w-16 h-16 object-cover rounded mt-2 cursor-pointer"
+                    onClick={() => openImageViewer(imageSrc)}
+                    onError={(e) => {
+                      console.error(`Failed to load image for trade ${index}: ${imageSrc}`);
+                      e.target.style.display = 'none'; // Verstecke fehlerhaftes Bild
+                      e.target.nextSibling.style.display = 'block'; // Zeige "No Image" an
+                    }}
+                  />
                 )}
               </div>
               <button
