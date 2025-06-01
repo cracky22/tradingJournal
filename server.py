@@ -42,13 +42,11 @@ logger.addHandler(last_log_handler)
 app = Flask(__name__)
 CORS(app)
 
-# Rate limiting setup (in-memory, per IP)
-REQUEST_LIMIT = 100  # Max requests per minute
-REQUEST_WINDOW = 60  # Seconds
+REQUEST_LIMIT = 100
+REQUEST_WINDOW = 60
 request_counts = defaultdict(list)
 
 def format_file_size(size_bytes):
-    """Convert bytes to human-readable format"""
     for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
         if size_bytes < 1024:
             return f"{size_bytes:.1f} {unit}"
@@ -56,7 +54,6 @@ def format_file_size(size_bytes):
     return f"{size_bytes:.1f} PB"
 
 def check_rate_limit(ip):
-    """Check if client IP exceeds rate limit"""
     now = timestamp()
     request_counts[ip] = [t for t in request_counts[ip] if now - t < REQUEST_WINDOW]
     if len(request_counts[ip]) >= REQUEST_LIMIT:
@@ -65,7 +62,6 @@ def check_rate_limit(ip):
     return True
 
 def validate_data(data):
-    """Validate incoming JSON data structure"""
     if not isinstance(data, dict):
         return False, "Data must be a dictionary"
     if 'currentProfile' not in data:
@@ -157,7 +153,6 @@ def get_data(profile_name):
         data = load_data()
         profile_data = data.get('profiles', {}).get(profile_name, {})
         
-        # Prepare response excluding images but including image references
         trades = profile_data.get('trades', {})
         modified_trades = {}
         for date, trade_list in trades.items():
@@ -215,8 +210,7 @@ def submit_data():
         current_data = load_data()
         profiles = data.get('profiles', ['Profile 1'])
         current_profile = data.get('currentProfile', 'Profile 1')
-        
-        # Update profiles data
+    
         current_data['profiles'] = current_data.get('profiles', {})
         for profile in profiles:
             current_data['profiles'][profile] = {
@@ -238,7 +232,7 @@ def signal_handler(sig, frame):
     sys.exit(0)
 
 def open_browser():
-    time.sleep(1)  # Wait for server to start
+    time.sleep(1)
     webbrowser.open(f"http://{HOST}:{PORT}")
 
 if __name__ == '__main__':
