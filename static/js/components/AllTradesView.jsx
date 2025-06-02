@@ -38,13 +38,22 @@ function AllTradesView({
         if (trade.imageRef) {
           const key = `${trade.date}-${filteredTrades.indexOf(trade)}`;
           if (!images[key]) {
-            const image = await fi(
-              cp,
-              trade.date,
-              filteredTrades.indexOf(trade)
-            );
-            newImages[key] = image;
+            try {
+              const image = await fi(cp, trade.date, filteredTrades.indexOf(trade));
+              console.log(`Fetched image for ${key}:`, image);
+              if (image && typeof image === 'string' && (image.startsWith('data:image') || /^[A-Za-z0-9+/=]+$/.test(image))) {
+                newImages[key] = image.startsWith('data:image') ? image : `data:image/png;base64,${image}`;
+              } else {
+                console.warn(`Invalid image data for ${key}:`, image);
+                newImages[key] = null;
+              }
+            } catch (error) {
+              console.error(`Failed to fetch image for ${key}:`, error);
+              newImages[key] = null;
+            }
           }
+        } else {
+          console.log(`No imageRef for trade at index ${filteredTrades.indexOf(trade)}`);
         }
       }
       if (Object.keys(newImages).length > 0) {
@@ -167,6 +176,7 @@ function AllTradesView({
             <tbody>
               {filteredTrades.map((trade, index) => {
                 const imageKey = `${trade.date}-${index}`;
+                const imageSrc = images[imageKey];
                 return (
                   <tr
                     key={imageKey}
@@ -188,11 +198,15 @@ function AllTradesView({
                     <td className="p-3">{trade.strategy || "N/A"}</td>
                     <td className="p-3">
                       {trade.imageRef ? (
-                        images[imageKey] ? (
+                        imageSrc ? (
                           <img
-                            src={`data:image/png;base64,${images[imageKey]}`}
+                            src={imageSrc}
                             alt="Trade screenshot"
                             className="w-16 h-16 object-cover rounded"
+                            onError={(e) => {
+                              console.error(`Image load failed for ${imageKey}:`, e);
+                              e.target.style.display = 'none';
+                            }}
                           />
                         ) : (
                           <span className="text-gray-400">Loading...</span>
